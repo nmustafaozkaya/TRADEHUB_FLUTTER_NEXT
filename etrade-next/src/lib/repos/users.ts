@@ -14,7 +14,7 @@ export type UserRow = {
 export async function findUserByUsername(username: string) {
   const rows = await query<UserRow>(
     `
-    SELECT TOP (1) ID, USERNAME_, PASSWORD_, NAMESURNAME, EMAIL
+    SELECT TOP (1) ID, USERNAME_, PASSWORD_, NAMESURNAME, EMAIL, GENDER, BIRTHDATE, PHONE
     FROM dbo.USERS
     WHERE USERNAME_ = @username
     `,
@@ -27,7 +27,7 @@ export async function findUserByUsername(username: string) {
 export async function findUserByLogin(login: string) {
   const rows = await query<UserRow>(
     `
-    SELECT TOP (1) ID, USERNAME_, PASSWORD_, NAMESURNAME, EMAIL
+    SELECT TOP (1) ID, USERNAME_, PASSWORD_, NAMESURNAME, EMAIL, GENDER, BIRTHDATE, PHONE
     FROM dbo.USERS
     WHERE USERNAME_ = @login OR EMAIL = @login
     `,

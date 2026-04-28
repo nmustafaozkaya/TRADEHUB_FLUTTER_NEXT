@@ -44,6 +44,10 @@ export async function POST(req: Request) {
       id: user.ID,
       username: user.USERNAME_ || login,
       nameSurname: user.NAMESURNAME || null,
+      email: user.EMAIL || null,
+      gender: user.GENDER || null,
+      birthdate: user.BIRTHDATE ? new Date(user.BIRTHDATE).toISOString().slice(0, 10) : null,
+      phone: user.PHONE || null,
     },
   });
 }

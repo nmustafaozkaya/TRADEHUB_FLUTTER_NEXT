@@ -116,6 +116,12 @@ export default function AdminOrderDetailPage() {
     if (ready) void load();
   }, [ready, orderId]);
 
+  useEffect(() => {
+    if (order?.Status === ORDER_STATUS.PREPARING) {
+      setShowShippingPanel(true);
+    }
+  }, [order?.Status]);
+
   const updateStatus = async (payload: {
     status: number;
     note?: string;
@@ -261,6 +267,16 @@ export default function AdminOrderDetailPage() {
                   className="rounded bg-rose-500 px-3 py-1.5 text-xs font-semibold text-rose-950"
                 >
                   Reject
+                </button>
+              </div>
+            ) : null}
+            {order.Status === ORDER_STATUS.PREPARING && !showShippingPanel ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowShippingPanel(true)}
+                  className="rounded bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-cyan-950"
+                >
+                  Open Shipping Panel
                 </button>
               </div>
             ) : null}

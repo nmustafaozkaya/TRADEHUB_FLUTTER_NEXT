@@ -3,8 +3,7 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { findUserByLogin } from "@/lib/repos/users";
-import { toggleFavoriteForUser } from "@/lib/repos/favorites";
-import { toggleFavorite } from "@/lib/favorites";
+import { listFavoriteItemIdsForUser } from "@/lib/repos/favorites";
 
 async function resolveUserId(req: Request): Promise<number | null> {
   const sessionUser = await getUser();
@@ -17,16 +16,11 @@ async function resolveUserId(req: Request): Promise<number | null> {
   return user?.ID ? Number(user.ID) : null;
 }
 
-export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as null | { itemId?: number };
-  const itemId = Number(body?.itemId);
-  if (!itemId) return NextResponse.json({ error: "itemId required" }, { status: 400 });
+export async function GET(req: Request) {
   const userId = await resolveUserId(req);
-  if (userId) {
-    const ids = await toggleFavoriteForUser(userId, itemId);
-    return NextResponse.json({ ok: true, ids });
+  if (!userId) {
+    return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
   }
-  const favs = await toggleFavorite(itemId);
-  return NextResponse.json({ ok: true, ids: favs.ids });
+  const ids = await listFavoriteItemIdsForUser(userId);
+  return NextResponse.json({ ok: true, ids });
 }
-

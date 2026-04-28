@@ -6,6 +6,13 @@ import { CheckoutAddressPicker } from "@/components/CheckoutAddressPicker";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
 import { cn } from "@/lib/ui";
 
+const CARD_BRAND_ASSETS = {
+  visa: "/payment/visa.png",
+  mastercard: "/payment/master-card.png",
+  amex: "/payment/american-express.png",
+  unionpay: "/payment/unionpay.jpg",
+} as const;
+
 export function CheckoutForm(props: {
   formId?: string;
   addresses: { ID: number; AddressText: string | null; Country: string | null; City: string | null; Town: string | null; District: string | null }[];
@@ -116,19 +123,19 @@ export function CheckoutForm(props: {
                           <div className="flex items-center gap-2">
                             {cardBrand === "unknown" ? (
                               <>
-                                <img src="/payment/visa.svg" alt="Visa" className="h-12 w-20 rounded-sm object-contain" />
-                                <img src="/payment/mastercard.svg" alt="Mastercard" className="h-12 w-20 rounded-sm object-contain" />
-                                <img src="/payment/amex.svg" alt="American Express" className="h-12 w-20 rounded-sm object-contain" />
-                                <img src="/payment/unionpay.svg" alt="China UnionPay" className="h-12 w-20 rounded-sm object-contain" />
+                                <img src={CARD_BRAND_ASSETS.visa} alt="Visa" className="h-12 w-20 rounded-sm object-contain" />
+                                <img src={CARD_BRAND_ASSETS.mastercard} alt="Mastercard" className="h-12 w-20 rounded-sm object-contain" />
+                                <img src={CARD_BRAND_ASSETS.amex} alt="American Express" className="h-12 w-20 rounded-sm object-contain" />
+                                <img src={CARD_BRAND_ASSETS.unionpay} alt="China UnionPay" className="h-12 w-20 rounded-sm object-contain" />
                               </>
                             ) : cardBrand === "visa" ? (
-                              <img src="/payment/visa.svg" alt="Visa" className="h-12 w-20 rounded-sm object-contain" />
+                              <img src={CARD_BRAND_ASSETS.visa} alt="Visa" className="h-12 w-20 rounded-sm object-contain" />
                             ) : cardBrand === "mastercard" ? (
-                              <img src="/payment/mastercard.svg" alt="Mastercard" className="h-12 w-20 rounded-sm object-contain" />
+                              <img src={CARD_BRAND_ASSETS.mastercard} alt="Mastercard" className="h-12 w-20 rounded-sm object-contain" />
                             ) : cardBrand === "unionpay" ? (
-                              <img src="/payment/unionpay.svg" alt="China UnionPay" className="h-12 w-20 rounded-sm object-contain" />
+                              <img src={CARD_BRAND_ASSETS.unionpay} alt="China UnionPay" className="h-12 w-20 rounded-sm object-contain" />
                             ) : (
-                              <img src="/payment/amex.svg" alt="American Express" className="h-12 w-20 rounded-sm object-contain" />
+                              <img src={CARD_BRAND_ASSETS.amex} alt="American Express" className="h-12 w-20 rounded-sm object-contain" />
                             )}
                           </div>
                         ) : null}
@@ -150,6 +157,8 @@ export function CheckoutForm(props: {
                           {props.savedCards.map((c) => {
                             const checked = selectedSavedCardId === c.id;
                             const exp = `${String(c.expMonth).padStart(2, "0")}/${String(c.expYear).slice(-2)}`;
+                            const savedBrand = detectSavedCardBrand(c.brand);
+                            const brandAsset = savedBrand ? CARD_BRAND_ASSETS[savedBrand] : null;
                             return (
                               <label
                                 key={c.id}
@@ -168,6 +177,13 @@ export function CheckoutForm(props: {
                                     onChange={() => setSelectedSavedCardId(c.id)}
                                     className="h-4 w-4 accent-sky-400"
                                   />
+                                  {brandAsset ? (
+                                    <img
+                                      src={brandAsset}
+                                      alt={c.brand}
+                                      className="h-5 w-8 rounded-sm border border-white/15 bg-white object-contain"
+                                    />
+                                  ) : null}
                                   <span>{c.brand} **** {c.last4}</span>
                                 </div>
                                 <span>{c.cardHolder} · {exp}</span>
@@ -311,5 +327,14 @@ function detectCardBrand(digits: string): "visa" | "mastercard" | "amex" | "unio
   if (/^62\d{0,}$/.test(digits)) return "unionpay";
   if (/^3[47]\d{0,}$/.test(digits)) return "amex";
   return "unknown";
+}
+
+function detectSavedCardBrand(brandRaw: string): "visa" | "mastercard" | "amex" | "unionpay" | null {
+  const brand = brandRaw.toLowerCase();
+  if (brand.includes("visa")) return "visa";
+  if (brand.includes("master")) return "mastercard";
+  if (brand.includes("american") || brand.includes("amex")) return "amex";
+  if (brand.includes("union")) return "unionpay";
+  return null;
 }
 

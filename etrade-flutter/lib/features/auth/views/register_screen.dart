@@ -1,19 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
-
-class _CountryCodeOption {
-  const _CountryCodeOption({
-    required this.flag,
-    required this.code,
-    required this.country,
-  });
-
-  final String flag;
-  final String code;
-  final String country;
-}
 
 /// Register screen for creating first local account.
 class RegisterScreen extends StatefulWidget {
@@ -32,27 +21,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _isLoading = false.obs;
   String? _selectedGender;
-  String _selectedPhoneCode = '+90';
+  static const _selectedPhoneCode = '+90';
   int? _selectedBirthYear;
   int? _selectedBirthMonth;
   int? _selectedBirthDay;
 
-  static const _phoneOptions = <_CountryCodeOption>[
-    _CountryCodeOption(flag: '🇹🇷', code: '+90', country: 'Turkiye'),
-    _CountryCodeOption(flag: '🇺🇸', code: '+1', country: 'United States'),
-    _CountryCodeOption(flag: '🇬🇧', code: '+44', country: 'United Kingdom'),
-    _CountryCodeOption(flag: '🇩🇪', code: '+49', country: 'Germany'),
-    _CountryCodeOption(flag: '🇫🇷', code: '+33', country: 'France'),
-    _CountryCodeOption(flag: '🇮🇹', code: '+39', country: 'Italy'),
-    _CountryCodeOption(flag: '🇪🇸', code: '+34', country: 'Spain'),
-    _CountryCodeOption(flag: '🇳🇱', code: '+31', country: 'Netherlands'),
-    _CountryCodeOption(flag: '🇸🇦', code: '+966', country: 'Saudi Arabia'),
-    _CountryCodeOption(flag: '🇦🇪', code: '+971', country: 'UAE'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
+    InputDecoration modernInput({
+      required String label,
+      IconData? icon,
+      Widget? customPrefix,
+    }) {
+      return InputDecoration(
+        labelText: label,
+        prefixIcon: customPrefix ?? (icon == null ? null : Icon(icon)),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.black12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.black12),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Account')),
@@ -71,14 +67,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
                         'assets/icons/TradeHub-logo.png',
-                        height: 120,
+                        height: 180,
                         fit: BoxFit.cover,
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(labelText: 'Username'),
+                      decoration: modernInput(
+                        label: 'Username',
+                        icon: Icons.person_outline_rounded,
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Username is required';
@@ -89,7 +88,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Full name'),
+                      decoration: modernInput(
+                        label: 'Full name',
+                        icon: Icons.badge_outlined,
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Full name is required';
@@ -100,7 +102,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration: modernInput(
+                        label: 'Email',
+                        icon: Icons.alternate_email_rounded,
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Email is required';
@@ -112,7 +117,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      decoration: modernInput(
+                        label: 'Password',
+                        icon: Icons.lock_outline_rounded,
+                      ),
                       validator: (value) {
                         if (value == null || value.length < 4) {
                           return 'Password must be at least 4 characters';
@@ -123,7 +131,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedGender,
-                      decoration: const InputDecoration(labelText: 'Gender'),
+                      decoration: modernInput(
+                        label: 'Gender',
+                        icon: Icons.wc_outlined,
+                      ),
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),
                         DropdownMenuItem(value: 'Female', child: Text('Female')),
@@ -149,7 +160,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Expanded(
                           child: DropdownButtonFormField<int>(
                             initialValue: _selectedBirthYear,
-                            decoration: const InputDecoration(labelText: 'Year'),
+                            decoration: modernInput(
+                              label: 'Year',
+                              icon: Icons.calendar_today_outlined,
+                            ),
                             items: List.generate(80, (index) {
                               final year = DateTime.now().year - index;
                               return DropdownMenuItem(
@@ -170,7 +184,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Expanded(
                           child: DropdownButtonFormField<int>(
                             initialValue: _selectedBirthMonth,
-                            decoration: const InputDecoration(labelText: 'Month'),
+                            decoration: modernInput(
+                              label: 'Month',
+                              icon: Icons.event_note_outlined,
+                            ),
                             items: List.generate(12, (index) {
                               final month = index + 1;
                               return DropdownMenuItem(
@@ -191,7 +208,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Expanded(
                           child: DropdownButtonFormField<int>(
                             initialValue: _selectedBirthDay,
-                            decoration: const InputDecoration(labelText: 'Day'),
+                            decoration: modernInput(
+                              label: 'Day',
+                              icon: Icons.today_outlined,
+                            ),
                             items: List.generate(31, (index) {
                               final day = index + 1;
                               return DropdownMenuItem(
@@ -214,40 +234,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                       decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        prefixIcon: Container(
-                          margin: const EdgeInsets.only(left: 8, right: 8),
-                          width: 155,
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            initialValue: _selectedPhoneCode,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                        labelText: 'Phone Number (TR)',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Center(
+                            widthFactor: 1,
+                            child: Text(
+                              '🇹🇷 +90',
+                              style: TextStyle(fontSize: 14),
                             ),
-                            dropdownColor: Colors.white,
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 13,
-                            ),
-                            items: _phoneOptions
-                                .map(
-                                  (item) => DropdownMenuItem(
-                                    value: item.code,
-                                    child: Text(
-                                      '${item.flag} ${item.code}',
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() {
-                                _selectedPhoneCode = value;
-                              });
-                            },
                           ),
                         ),
                       ),
@@ -255,12 +265,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Phone number is required';
                         }
+                        if (value.trim().length != 10) {
+                          return 'Enter 10 digits (5XXXXXXXXX)';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
                     Obx(
-                      () => FilledButton(
+                      () => FilledButton.icon(
                         onPressed: _isLoading.value
                             ? null
                             : () async {
@@ -294,7 +307,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 }
                                 Get.back();
                               },
-                        child: Text(_isLoading.value ? 'Creating...' : 'Create Account'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(50),
+                          backgroundColor: const Color(0xFF4F46E5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        icon: const Icon(Icons.person_add_alt_1_rounded),
+                        label: Text(_isLoading.value ? 'Creating...' : 'Create Account'),
                       ),
                     ),
                   ],

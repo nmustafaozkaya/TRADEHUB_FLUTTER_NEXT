@@ -4,7 +4,6 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/requireAuth";
 import { getUserProfileById } from "@/lib/repos/users";
 import { UserInfoForm } from "./UserInfoForm";
-import { ChangePasswordForm } from "./ChangePasswordForm";
 
 export const runtime = "nodejs";
 
@@ -48,15 +47,6 @@ export default async function UserInfoPage() {
         </CardBody>
       </Card>
 
-      <Card>
-        <CardBody>
-          <h2 className="text-lg font-semibold text-slate-100">Change password</h2>
-          <p className="mt-1 text-sm text-slate-400">Enter your current password, then set and confirm your new password.</p>
-          <div className="mt-4">
-            <ChangePasswordForm />
-          </div>
-        </CardBody>
-      </Card>
     </div>
   );
 }

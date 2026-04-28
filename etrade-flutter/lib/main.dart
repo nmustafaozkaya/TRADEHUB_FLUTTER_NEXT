@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'features/auth/controllers/auth_controller.dart';
+import 'features/home/controllers/home_controller.dart';
 import 'features/auth/views/login_screen.dart';
 import 'features/home/views/home_screen.dart';
 
@@ -19,10 +20,19 @@ class EtradeApp extends StatelessWidget {
       title: 'TradeHub',
       initialBinding: BindingsBuilder(() {
         Get.put(AuthController(), permanent: true);
+        Get.put(HomeController(), permanent: true);
       }),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         scaffoldBackgroundColor: const Color(0xFFF8F9FB),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+        ),
         useMaterial3: true,
       ),
       home: const AuthGate(),

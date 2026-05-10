@@ -43,6 +43,12 @@ export default async function ItemsPage({
   const showing = result.items.length;
   const hasSearchQuery = q.trim().length > 0;
 
+  const categoryLabel = (rawCategory: string) => {
+    if (rawCategory === "Fresh Vegetables") return "Vegetables";
+    if (rawCategory === "Fresh Greens") return "Leafy Greens";
+    return rawCategory;
+  };
+
   return (
     <div className="space-y-4">
       <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/25 p-5">
@@ -101,7 +107,7 @@ export default async function ItemsPage({
                     category === c.Category ? "border-sky-400/30 bg-sky-400/10" : "",
                   ].join(" ")}
                 >
-                  <div className="text-sm font-bold text-slate-100 group-hover:text-white">{c.Category}</div>
+                  <div className="text-sm font-bold text-slate-100 group-hover:text-white">{categoryLabel(c.Category)}</div>
                   <div className="mt-1 text-xs text-slate-400">{c.Cnt} items</div>
                 </Link>
               ))}
@@ -181,7 +187,7 @@ export default async function ItemsPage({
             <>
               {" "}
               <span className="text-white/15">•</span> Category:{" "}
-              <b className="text-slate-200">{category}</b>
+              <b className="text-slate-200">{categoryLabel(category)}</b>
             </>
           ) : null}
         </span>

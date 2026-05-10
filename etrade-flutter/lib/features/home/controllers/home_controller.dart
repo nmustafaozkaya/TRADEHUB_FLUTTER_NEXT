@@ -25,12 +25,12 @@ class HomeController extends GetxController {
     'Home & Living',
     'Candy & Sweets',
     'Fresh Fruits',
-    'Fresh Vegetables',
+    'Vegetables',
     'Pantry & Spices',
     'Poultry & Eggs',
     'Breakfast & Dairy',
     'Toys & Games',
-    'Fresh Greens',
+    'Leafy Greens',
   ].obs;
 
   final selectedCategory = 'All'.obs;
@@ -46,6 +46,8 @@ class HomeController extends GetxController {
   final addresses = <UserAddress>[].obs;
   final savedCards = <SavedCardItem>[].obs;
   final orders = <UserOrderItem>[].obs;
+  final isOrdersLoading = false.obs;
+  final ordersErrorMessage = ''.obs;
   final isSavingProfile = false.obs;
 
   @override
@@ -54,6 +56,7 @@ class HomeController extends GetxController {
     loadProducts();
     loadAccountModules();
   }
+  
 
   /// Fetches products from repository and updates UI states.
   Future<void> loadProducts() async {
@@ -205,12 +208,83 @@ class HomeController extends GetxController {
     clearCart();
     Get.snackbar('Checkout', 'Order created in MVP flow.');
   }
+Future<int?> createOrder({
+  required int addressId,
+  required String paymentMethod,
+  int? cardId,
+  Map<String, dynamic>? newCardDetails,
+}) async {
+  if (cartQuantities.isEmpty) {
+    Get.snackbar('Checkout', 'Your cart is empty.');
+    return null;
+  }
 
+  if (newCardDetails != null && newCardDetails['saveForAccount'] == true) {
+    final holder = (newCardDetails['holderName'] ?? '').toString();
+    final number = (newCardDetails['number'] ?? '').toString();
+    final expiry = (newCardDetails['expiry'] ?? '').toString();
+    final parts = expiry.split('/');
+    final month = parts.isNotEmpty ? parts.first : '';
+    final year = parts.length > 1 ? parts.last : '';
+    await addCard(
+      cardNo: number,
+      cardHolder: holder,
+      expMonth: month,
+      expYear: year,
+    );
+  }
+
+  // Cart lines'ı API formatına çevir
+  final lines = <Map<String, dynamic>>[];
+  for (final entry in cartQuantities.entries) {
+    ProductItem? product;
+    for (final p in products) {
+      if (p.id == entry.key) {
+        product = p;
+        break;
+      }
+    }
+    if (product == null) continue;
+    lines.add({
+      'itemId': product.id,
+      'name': product.name,
+      'unitPrice': product.price,
+      'qty': entry.value,
+    });
+  }
+
+  final orderId = await _accountApiService.createOrder(
+    addressId: addressId,
+    paymentMethod: paymentMethod,
+    lines: lines,
+    userId: _currentUserId(),
+    username: _currentLogin(),
+  );
+
+  if (orderId != null) {
+    clearCart();
+    await _loadOrders();
+  }
+
+  return orderId;
+}
   Future<void> loadAccountModules() async {
+    await _waitForAuthReady();
     await _loadLocalProfile();
     await _loadAddresses();
     await _loadCards();
     await _loadOrders();
+  }
+
+  Future<void> _waitForAuthReady() async {
+    if (!Get.isRegistered<AuthController>()) return;
+    final auth = Get.find<AuthController>();
+    if (auth.isReady.value) return;
+    try {
+      await auth.isReady.stream.firstWhere((ready) => ready);
+    } catch (_) {
+      // Ignore if auth readiness stream is closed or unavailable.
+    }
   }
 
   Future<void> saveProfile(UserProfile newProfile) async {
@@ -361,29 +435,36 @@ class HomeController extends GetxController {
     favoriteProductIds.refresh();
   }
 
-  Future<void> _loadOrders() async {
-    final apiOrders = await _accountApiService.fetchOrders(
+  Future<UserOrderDetail?> fetchOrderDetail(int orderId) async {
+    return _accountApiService.fetchOrderDetail(
+      orderId,
       userId: _currentUserId(),
       username: _currentLogin(),
     );
-    if (apiOrders.isNotEmpty) {
+  }
+  
+
+  Future<void> _loadOrders() async {
+    isOrdersLoading.value = true;
+    ordersErrorMessage.value = '';
+    try {
+      final apiOrders = await _accountApiService.fetchOrders(
+        userId: _currentUserId(),
+        username: _currentLogin(),
+      );
+      if (apiOrders == null) {
+        orders.clear();
+        ordersErrorMessage.value =
+            'Siparişler yüklenemedi. Lütfen tekrar deneyin.';
+        return;
+      }
       orders.assignAll(apiOrders);
-      return;
+    } catch (error) {
+      orders.clear();
+      ordersErrorMessage.value = 'Siparişler yüklenemedi. Lütfen tekrar deneyin.';
+    } finally {
+      isOrdersLoading.value = false;
     }
-    orders.assignAll([
-      UserOrderItem(
-        id: 1001,
-        totalPrice: 1249,
-        statusText: 'Delivered',
-        dateLabel: '2026-04-19',
-      ),
-      UserOrderItem(
-        id: 1002,
-        totalPrice: 399,
-        statusText: 'Preparing',
-        dateLabel: '2026-04-20',
-      ),
-    ]);
   }
 
   int? _currentUserId() {
@@ -406,22 +487,40 @@ class HomeController extends GetxController {
     if (selected == 'all') return true;
     final category = rawCategory.toLowerCase();
 
+    if (category.contains(selected)) {
+      return true;
+    }
+
     final aliases = <String, List<String>>{
-      'beauty & personal care': ['beauty', 'personal care', 'kozmetik', 'bakim'],
+      'beauty & personal care': [
+        'beauty',
+        'personal care',
+        'kozmetik',
+        'bakim',
+      ],
       'home & living': ['home', 'living', 'ev', 'yasam', 'mobilya'],
       'candy & sweets': ['candy', 'sweet', 'seker', 'tatli', 'cikolata'],
       'fresh fruits': ['fruit', 'meyve'],
-      'fresh vegetables': ['vegetable', 'sebze'],
+      'vegetables': ['vegetable', 'vegetables', 'sebze', 'veggie', 'veggies'],
       'pantry & spices': ['pantry', 'spice', 'baharat', 'erzak', 'bakliyat'],
       'poultry & eggs': ['poultry', 'egg', 'tavuk', 'yumurta'],
       'breakfast & dairy': ['breakfast', 'dairy', 'kahvalti', 'sut', 'peynir'],
       'toys & games': ['toy', 'game', 'oyuncak', 'oyun'],
-      'fresh greens': ['green', 'yesillik', 'salata'],
+      'leafy greens': [
+        'leafy green',
+        'leafy greens',
+        'fresh green',
+        'fresh greens',
+        'green',
+        'greens',
+        'yesillik',
+        'salata',
+      ],
     };
 
     final keywords = aliases[selected];
     if (keywords == null || keywords.isEmpty) {
-      return category.contains(selected);
+      return false;
     }
     return keywords.any(category.contains);
   }

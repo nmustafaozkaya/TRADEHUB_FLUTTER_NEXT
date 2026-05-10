@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/account_models.dart';
@@ -10,7 +11,11 @@ class AccountApiService {
 
   final http.Client _client;
   static const _baseUrl = 'http://10.0.2.2:3000';
-  Map<String, String> _headers({int? userId, String? username, bool json = true}) {
+  Map<String, String> _headers({
+    int? userId,
+    String? username,
+    bool json = true,
+  }) {
     final headers = <String, String>{};
     if (json) headers['Content-Type'] = 'application/json';
     if (userId != null && userId > 0) headers['x-user-id'] = '$userId';
@@ -20,7 +25,11 @@ class AccountApiService {
     return headers;
   }
 
-  Future<bool> updateProfile(UserProfile profile, {int? userId, String? username}) async {
+  Future<bool> updateProfile(
+    UserProfile profile, {
+    int? userId,
+    String? username,
+  }) async {
     try {
       final response = await _client.put(
         Uri.parse('$_baseUrl/api/account/profile'),
@@ -39,30 +48,80 @@ class AccountApiService {
     }
   }
 
-  Future<List<UserOrderItem>> fetchOrders({int? userId, String? username}) async {
+  Future<List<UserOrderItem>?> fetchOrders({
+    int? userId,
+    String? username,
+  }) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/account/orders'),
         headers: _headers(userId: userId, username: username, json: false),
       );
-      if (response.statusCode < 200 || response.statusCode >= 300) return [];
+      debugPrint('ORDERS STATUS: ${response.statusCode}');
+      debugPrint('ORDERS BODY: ${response.body}');
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+      
       final map = jsonDecode(response.body) as Map<String, dynamic>;
       final list = (map['orders'] as List<dynamic>? ?? <dynamic>[]);
       return list.map((raw) {
         final json = raw as Map<String, dynamic>;
         return UserOrderItem(
-          id: (json['ID'] as num?)?.toInt() ?? 0,
-          totalPrice: (json['TotalPrice'] as num?)?.toDouble() ?? 0,
-          statusText: (json['statusLabel'] ?? json['Status'] ?? 'Unknown').toString(),
-          dateLabel: (json['Date'] ?? '-').toString(),
+          id: (json['id'] as num?)?.toInt() ?? 0,
+          totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0,
+          statusText: (json['statusLabel'] ?? json['status'] ?? 'Unknown')
+              .toString(),
+          dateLabel: (json['date'] ?? '-').toString(),
+          status: (json['status'] as num?)?.toInt(),
+          cargoCompany: json['cargoCompany']?.toString(),
+          trackingNo: json['trackingNo']?.toString(),
+          addressText: json['addressText']?.toString(),
+          
         );
+        
+        
       }).toList();
     } catch (_) {
-      return [];
+      return null;
     }
   }
+Future<UserOrderDetail?> fetchOrderDetail(
+  int orderId, {
+  int? userId,
+  String? username,
+}) async {
+  try {
+    // ── Ekle ──
+    final url = '$_baseUrl/api/account/orders/$orderId';
+    debugPrint('ORDER DETAIL URL: $url');
+    debugPrint('ORDER DETAIL HEADERS: ${_headers(userId: userId, username: username, json: false)}');
+    // ──────────
+    final response = await _client.get(
+      Uri.parse('$_baseUrl/api/account/orders/$orderId'),
+      headers: _headers(userId: userId, username: username, json: false),
+    );
+    debugPrint('ORDER DETAIL STATUS: ${response.statusCode}');
+    debugPrint('ORDER DETAIL BODY: ${response.body}');
+    // geri kalanı aynı...
+    // ─────────────────────────
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+    final map = jsonDecode(response.body) as Map<String, dynamic>;
+    final orderJson = map['order'] as Map<String, dynamic>?;
+    if (orderJson == null) return null;
+    final lines = (map['lines'] as List<dynamic>? ?? <dynamic>[]);
+    return UserOrderDetail.fromJson(orderJson, lines);
+  } catch (e, stack) {
+    debugPrint('ORDER DETAIL ERROR: $e');
+    debugPrint('ORDER DETAIL STACK: $stack');
+    return null;
+  }
+}
 
-  Future<List<UserAddress>> fetchAddresses({int? userId, String? username}) async {
+  Future<List<UserAddress>> fetchAddresses({
+    int? userId,
+    String? username,
+  }) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/account/addresses'),
@@ -83,8 +142,36 @@ class AccountApiService {
       return [];
     }
   }
+  Future<int?> createOrder({
+  required int addressId,
+  required String paymentMethod,
+  required List<Map<String, dynamic>> lines,
+  int? userId,
+  String? username,
+}) async {
+  try {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/account/orders'),
+      headers: _headers(userId: userId, username: username),
+      body: jsonEncode({
+        'addressId': addressId,
+        'paymentMethod': paymentMethod,
+        'lines': lines,
+      }),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+    final map = jsonDecode(response.body) as Map<String, dynamic>;
+    return (map['orderId'] as num?)?.toInt();
+  } catch (_) {
+    return null;
+  }
+}
 
-  Future<bool> createAddress(String addressText, {int? userId, String? username}) async {
+  Future<bool> createAddress(
+    String addressText, {
+    int? userId,
+    String? username,
+  }) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/account/addresses'),
@@ -104,7 +191,11 @@ class AccountApiService {
     }
   }
 
-  Future<bool> deleteAddress(int addressId, {int? userId, String? username}) async {
+  Future<bool> deleteAddress(
+    int addressId, {
+    int? userId,
+    String? username,
+  }) async {
     try {
       final response = await _client.delete(
         Uri.parse('$_baseUrl/api/account/addresses?id=$addressId'),
@@ -116,7 +207,10 @@ class AccountApiService {
     }
   }
 
-  Future<List<SavedCardItem>> fetchCards({int? userId, String? username}) async {
+  Future<List<SavedCardItem>> fetchCards({
+    int? userId,
+    String? username,
+  }) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/account/cards'),

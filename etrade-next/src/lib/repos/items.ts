@@ -28,7 +28,7 @@ export async function listItems(
   const category = opts.category?.trim() || null;
   const sort = opts.sort || "newest";
   const page = Math.max(1, Number(opts.page ?? 1));
-  const pageSize = Math.min(500, Math.max(1, Number(opts.pageSize ?? 20)));
+  const pageSize = Math.min(2000, Math.max(1, Number(opts.pageSize ?? 20)));
   const offset = (page - 1) * pageSize;
 
   const orderBy =

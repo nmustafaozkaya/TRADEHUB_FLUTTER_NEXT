@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { findUserByLogin } from "@/lib/repos/users";
 import { getOrderForUser, listOrderLinesForUser } from "@/lib/repos/ordersHistory";
+import { confirmDeliveredByUser } from "@/lib/repos/adminOrders";
 import { orderStatusLabel } from "@/lib/orderStatus";
 import { shippingFee } from "@/lib/shipping";
 
@@ -65,4 +66,25 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       lineTotal: Number(line.LineTotal ?? 0),
     })),
   });
+}
+
+export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const userId = await resolveUserId(req);
+  if (!userId) {
+    return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
+  }
+
+  const params = await ctx.params;
+  const orderId = Number(params.id);
+  if (!Number.isFinite(orderId) || orderId <= 0) {
+    return NextResponse.json({ ok: false, error: "Invalid order id." }, { status: 400 });
+  }
+
+  try {
+    await confirmDeliveredByUser(orderId, userId);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Could not confirm delivery.";
+    return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+  }
 }

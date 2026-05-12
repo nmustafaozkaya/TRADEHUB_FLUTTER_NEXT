@@ -3,6 +3,11 @@
 :root {
   --background: #0b1020;
   --foreground: #e8ecff;
+  /* TradeHub brand (aligned with Flutter TradeHubColors) */
+  --th-primary: #818cf8;
+  --th-primary-deep: #6366f1;
+  --th-accent: #38bdf8;
+  --th-surface: rgba(30, 41, 59, 0.55);
 }
 
 @theme inline {

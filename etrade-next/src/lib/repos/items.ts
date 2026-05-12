@@ -1,4 +1,5 @@
 import { query } from "../db";
+import { buildCategorySqlFilter } from "../shopCategories";
 
 export type ItemRow = {
   ID: number;
@@ -26,9 +27,10 @@ export async function listItems(
   const q = opts.q?.trim() || null;
   const brand = opts.brand?.trim() || null;
   const category = opts.category?.trim() || null;
+  const categorySql = buildCategorySqlFilter(category);
   const sort = opts.sort || "newest";
   const page = Math.max(1, Number(opts.page ?? 1));
-  const pageSize = Math.min(2000, Math.max(1, Number(opts.pageSize ?? 20)));
+  const pageSize = Math.min(10000, Math.max(1, Number(opts.pageSize ?? 20)));
   const offset = (page - 1) * pageSize;
 
   const orderBy =
@@ -51,12 +53,9 @@ export async function listItems(
         OR ITEMCODE LIKE '%' + @q + '%'
       )
       AND (@brand IS NULL OR BRAND = @brand)
-      AND (
-        @category IS NULL OR
-        CATEGORY1 = @category OR CATEGORY2 = @category OR CATEGORY3 = @category OR CATEGORY4 = @category
-      )
+      AND ${categorySql.clause}
     `,
-    { q, brand, category }
+    { q, brand, ...categorySql.params }
   );
   const total = Number(countRows[0]?.Total ?? 0);
 
@@ -81,14 +80,11 @@ export async function listItems(
         OR ITEMCODE LIKE '%' + @q + '%'
       )
       AND (@brand IS NULL OR BRAND = @brand)
-      AND (
-        @category IS NULL OR
-        CATEGORY1 = @category OR CATEGORY2 = @category OR CATEGORY3 = @category OR CATEGORY4 = @category
-      )
+      AND ${categorySql.clause}
     ORDER BY ${orderBy}
     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
     `,
-    { q, brand, category, offset, limit: pageSize }
+    { q, brand, ...categorySql.params, offset, limit: pageSize }
   );
 
   return { items, total, page, pageSize };

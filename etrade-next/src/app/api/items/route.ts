@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   const category = url.searchParams.get("category") || undefined;
   const sort = readSort(url.searchParams.get("sort"));
   const page = Number(url.searchParams.get("page") || 1);
-  const pageSize = Number(url.searchParams.get("pageSize") || 20);
+  const pageSize = Math.min(10000, Math.max(1, Number(url.searchParams.get("pageSize") || 20)));
 
   const result = await listItems({
     q,

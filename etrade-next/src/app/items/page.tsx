@@ -7,7 +7,12 @@ import { AddToCartButton } from "@/components/AddToCartButton";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
-import { listBestSellers, listTopCategories } from "@/lib/repos/dashboard";
+import { listAllCategory1Counts, listBestSellers } from "@/lib/repos/dashboard";
+import {
+  SHOP_CATEGORIES,
+  aggregateTopCategoriesToShop,
+  displayCategoryFilter,
+} from "@/lib/shopCategories";
 import { getFavorites } from "@/lib/favorites";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { itemPrimaryImageSrc } from "@/lib/itemImage";
@@ -24,12 +29,13 @@ export default async function ItemsPage({
   const category = sp.category?.toString() || "";
   const page = Math.max(1, Number(sp.page ?? "1"));
 
-  const [result, topCategories, bestSellers, favs] = await Promise.all([
+  const [result, rawCategoryCounts, bestSellers, favs] = await Promise.all([
     listItems({ q, category, page, pageSize: 20 }),
-    listTopCategories(10),
+    listAllCategory1Counts(),
     listBestSellers(10),
     getFavorites(),
   ]);
+  const shopCounts = aggregateTopCategoriesToShop(rawCategoryCounts);
   const favSet = new Set(favs.ids);
   const lastPage = Math.max(1, Math.ceil(result.total / result.pageSize));
 
@@ -43,15 +49,9 @@ export default async function ItemsPage({
   const showing = result.items.length;
   const hasSearchQuery = q.trim().length > 0;
 
-  const categoryLabel = (rawCategory: string) => {
-    if (rawCategory === "Fresh Vegetables") return "Vegetables";
-    if (rawCategory === "Fresh Greens") return "Leafy Greens";
-    return rawCategory;
-  };
-
   return (
     <div className="space-y-4">
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/25 p-5">
+      <section className="relative overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-indigo-950/40 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
         <div className="pointer-events-none absolute inset-0 opacity-[0.12]">
           <Image
             src="/TradeHub-horizontal.png"
@@ -62,19 +62,22 @@ export default async function ItemsPage({
             className="object-cover object-center blur-[1px]"
           />
         </div>
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-fuchsia-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-500/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-sky-400/15 blur-3xl" />
         <div className="relative">
         <form action="/items" method="get" className="flex w-full flex-col gap-2">
           <input
             name="q"
             defaultValue={q}
             placeholder="Search by product, category, or brand"
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-base outline-none focus:border-white/20"
+            className="w-full rounded-2xl border border-white/10 bg-[color:var(--background)]/55 px-4 py-3 text-base text-[color:var(--foreground)] outline-none ring-0 transition focus:border-indigo-400/40 focus:ring-2 focus:ring-indigo-400/25"
           />
           <div className="flex flex-col gap-2 md:flex-row">
             <input type="hidden" name="category" value={category} />
-            <button className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 md:w-28">
+            <button
+              type="submit"
+              className="rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:from-indigo-400 hover:to-indigo-500 md:w-32"
+            >
               Search
             </button>
           </div>
@@ -88,7 +91,9 @@ export default async function ItemsPage({
             <div className="flex items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">Categories</h2>
-                <p className="text-sm text-slate-400">Top categories by number of products.</p>
+                <p className="text-sm text-slate-400">
+                  Same groups as the mobile app. Counts include all active items in the database (0 is valid if nothing maps yet).
+                </p>
               </div>
               {category ? (
                 <ButtonLink href="/items" variant="soft">
@@ -97,20 +102,28 @@ export default async function ItemsPage({
               ) : null}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {topCategories.map((c) => (
-                <Link
-                  key={c.Category}
-                  href={`/items?${new URLSearchParams({ ...(q ? { q } : {}), category: c.Category }).toString()}`}
-                  className={[
-                    "group rounded-2xl border border-white/10 bg-slate-900/25 p-4 transition hover:-translate-y-0.5 hover:border-white/20",
-                    category === c.Category ? "border-sky-400/30 bg-sky-400/10" : "",
-                  ].join(" ")}
-                >
-                  <div className="text-sm font-bold text-slate-100 group-hover:text-white">{categoryLabel(c.Category)}</div>
-                  <div className="mt-1 text-xs text-slate-400">{c.Cnt} items</div>
-                </Link>
-              ))}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {SHOP_CATEGORIES.map((def) => {
+                const cnt = shopCounts.get(def.label) ?? 0;
+                const active = category === def.label;
+                return (
+                  <Link
+                    key={def.label}
+                    href={`/items?${new URLSearchParams({ ...(q ? { q } : {}), category: def.label }).toString()}`}
+                    className={[
+                      "group rounded-2xl border border-white/10 bg-slate-900/40 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400/25 hover:shadow-indigo-900/20",
+                      active
+                        ? "border-indigo-400/40 bg-indigo-500/15 ring-2 ring-indigo-400/30"
+                        : "",
+                    ].join(" ")}
+                  >
+                    <div className="text-sm font-bold text-slate-100 group-hover:text-white">{def.label}</div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      {cnt} {cnt === 1 ? "item" : "items"}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
 
@@ -133,7 +146,7 @@ export default async function ItemsPage({
                   return (
                     <div
                       key={it.ID}
-                      className="w-[260px] shrink-0 rounded-2xl border border-white/10 bg-slate-900/25 p-4 transition hover:-translate-y-0.5 hover:border-white/20"
+                      className="w-[260px] shrink-0 rounded-2xl border border-white/10 bg-slate-900/45 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400/25"
                     >
                       <Link href={`/items/${it.ID}`} className="block overflow-hidden rounded-xl border border-white/10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -149,7 +162,7 @@ export default async function ItemsPage({
                         </div>
                         <div className="mt-3 flex items-center justify-between">
                           <div className="flex flex-wrap gap-2">
-                            {it.BRAND ? <Badge className="border-sky-400/20 bg-sky-400/10 text-sky-100/90">{it.BRAND}</Badge> : null}
+                            {it.BRAND ? <Badge className="border-indigo-400/25 bg-indigo-500/15 text-indigo-100/95">{it.BRAND}</Badge> : null}
                           </div>
                           <div className="flex items-center gap-2">
                             <FavoriteButton itemId={it.ID} active={favSet.has(it.ID)} />
@@ -187,7 +200,7 @@ export default async function ItemsPage({
             <>
               {" "}
               <span className="text-white/15">•</span> Category:{" "}
-              <b className="text-slate-200">{categoryLabel(category)}</b>
+              <b className="text-slate-200">{displayCategoryFilter(category)}</b>
             </>
           ) : null}
         </span>
@@ -213,7 +226,7 @@ export default async function ItemsPage({
           return (
             <div
               key={it.ID}
-              className="group rounded-2xl border border-white/10 bg-slate-900/25 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-white/20"
+              className="group rounded-2xl border border-white/10 bg-slate-900/45 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:border-indigo-400/25 hover:shadow-indigo-900/25"
             >
               <Link href={`/items/${it.ID}`} className="block overflow-hidden rounded-xl border border-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -236,15 +249,17 @@ export default async function ItemsPage({
                     <span>Brand: {it.BRAND || "-"}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {it.BRAND ? <Badge className="border-sky-400/20 bg-sky-400/10 text-sky-100/90">{it.BRAND}</Badge> : null}
-                    {it.CATEGORY1 ? <Badge>{it.CATEGORY1}</Badge> : null}
+                    {it.BRAND ? <Badge className="border-indigo-400/25 bg-indigo-500/15 text-indigo-100/95">{it.BRAND}</Badge> : null}
+                    {it.CATEGORY1 ? <Badge>{displayCategoryFilter(it.CATEGORY1)}</Badge> : null}
                   </div>
                 </div>
                 <FavoriteButton itemId={it.ID} active={favSet.has(it.ID)} />
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <div className="text-lg font-extrabold">{formatTry(unitPrice)}</div>
+                <div className="bg-gradient-to-r from-indigo-200 to-sky-200 bg-clip-text text-lg font-extrabold text-transparent">
+                  {formatTry(unitPrice)}
+                </div>
                 <AddToCartButton itemId={it.ID} name={name} unitPrice={unitPrice} />
               </div>
             </div>

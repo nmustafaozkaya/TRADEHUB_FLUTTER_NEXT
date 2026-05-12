@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/home_controller.dart';
 import 'home_shared_widgets.dart';
 
@@ -32,18 +33,21 @@ class _CardsPageState extends State<CardsPage> {
       required String label,
       required IconData icon,
     }) {
+      final border = OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+      );
       return InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        labelStyle: const TextStyle(color: TradeHubColors.textMuted),
+        prefixIcon: Icon(icon, color: TradeHubColors.textMuted),
         filled: true,
-        fillColor: Colors.grey.shade50,
-        border: OutlineInputBorder(
+        fillColor: TradeHubColors.surface2,
+        border: border,
+        enabledBorder: border,
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: const BorderSide(color: TradeHubColors.accent, width: 1.5),
         ),
       );
     }
@@ -102,6 +106,8 @@ class _CardsPageState extends State<CardsPage> {
             TextField(
               controller: cardNumberController,
               keyboardType: TextInputType.number,
+              style: const TextStyle(color: TradeHubColors.textPrimary),
+              cursorColor: TradeHubColors.accent,
               decoration: modernInput(
                 label: 'Card number',
                 icon: Icons.numbers_rounded,
@@ -110,6 +116,8 @@ class _CardsPageState extends State<CardsPage> {
             const SizedBox(height: 8),
             TextField(
               controller: cardHolderController,
+              style: const TextStyle(color: TradeHubColors.textPrimary),
+              cursorColor: TradeHubColors.accent,
               decoration: modernInput(
                 label: 'Card holder',
                 icon: Icons.person_outline,
@@ -122,6 +130,8 @@ class _CardsPageState extends State<CardsPage> {
                   child: TextField(
                     controller: cardMonthController,
                     keyboardType: TextInputType.number,
+                    style: const TextStyle(color: TradeHubColors.textPrimary),
+                    cursorColor: TradeHubColors.accent,
                     decoration: modernInput(
                       label: 'MM',
                       icon: Icons.date_range_outlined,
@@ -133,6 +143,8 @@ class _CardsPageState extends State<CardsPage> {
                   child: TextField(
                     controller: cardYearController,
                     keyboardType: TextInputType.number,
+                    style: const TextStyle(color: TradeHubColors.textPrimary),
+                    cursorColor: TradeHubColors.accent,
                     decoration: modernInput(
                       label: 'YYYY',
                       icon: Icons.event_outlined,
@@ -176,11 +188,16 @@ class _CardsPageState extends State<CardsPage> {
                   ? Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: TradeHubColors.surface2,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.black12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
-                      child: const Text('No card saved yet.'),
+                      child: const Text(
+                        'No card saved yet.',
+                        style: TextStyle(color: TradeHubColors.textMuted),
+                      ),
                     )
                   : ListView.separated(
                       itemCount: widget.controller.savedCards.length,
@@ -192,18 +209,21 @@ class _CardsPageState extends State<CardsPage> {
                         return Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: TradeHubColors.surface2,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.black12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
                           ),
                           child: Row(
                             children: [
                               CircleAvatar(
                                 radius: 19,
-                                backgroundColor: Colors.indigo.shade50,
+                                backgroundColor: TradeHubColors.primary
+                                    .withValues(alpha: 0.22),
                                 child: const Icon(
                                   Icons.credit_card,
-                                  color: Colors.indigo,
+                                  color: TradeHubColors.primary,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -215,13 +235,14 @@ class _CardsPageState extends State<CardsPage> {
                                       '${card.brand} •••• ${card.last4}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w700,
+                                        color: TradeHubColors.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
                                       '${card.cardHolder} • ${card.expMonth.toString().padLeft(2, '0')}/${card.expYear.toString().substring(2)}',
                                       style: const TextStyle(
-                                        color: Colors.black54,
+                                        color: TradeHubColors.textMuted,
                                       ),
                                     ),
                                   ],
@@ -230,7 +251,10 @@ class _CardsPageState extends State<CardsPage> {
                               IconButton(
                                 onPressed: () =>
                                     widget.controller.removeCard(card.id),
-                                icon: const Icon(Icons.delete_outline),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: TradeHubColors.textMuted,
+                                ),
                               ),
                             ],
                           ),

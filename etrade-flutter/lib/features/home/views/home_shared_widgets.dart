@@ -16,9 +16,12 @@ class SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final muted = onSurface.withValues(alpha: 0.65);
     final style = TextStyle(
       fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
       fontSize: isBold ? 16 : 14,
+      color: onSurface,
     );
 
     return Padding(
@@ -33,7 +36,7 @@ class SummaryRow extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     note!,
-                    style: const TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: muted, fontSize: 12),
                   ),
                 ],
               ],

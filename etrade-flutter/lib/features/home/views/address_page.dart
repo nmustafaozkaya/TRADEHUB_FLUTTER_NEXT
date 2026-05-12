@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/home_controller.dart';
 import 'home_shared_widgets.dart';
 
@@ -30,18 +31,21 @@ class _AddressPageState extends State<AddressPage> {
       required String label,
       required IconData icon,
     }) {
+      final border = OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+      );
       return InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        labelStyle: const TextStyle(color: TradeHubColors.textMuted),
+        prefixIcon: Icon(icon, color: TradeHubColors.textMuted),
         filled: true,
-        fillColor: Colors.grey.shade50,
-        border: OutlineInputBorder(
+        fillColor: TradeHubColors.surface2,
+        border: border,
+        enabledBorder: border,
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: const BorderSide(color: TradeHubColors.accent, width: 1.5),
         ),
       );
     }
@@ -101,6 +105,8 @@ class _AddressPageState extends State<AddressPage> {
               controller: addressController,
               minLines: 2,
               maxLines: 3,
+              style: const TextStyle(color: TradeHubColors.textPrimary),
+              cursorColor: TradeHubColors.accent,
               decoration: modernInput(
                 label: 'New address',
                 icon: Icons.home_work_outlined,
@@ -133,11 +139,16 @@ class _AddressPageState extends State<AddressPage> {
                   ? Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: TradeHubColors.surface2,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.black12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
-                      child: const Text('No address added yet.'),
+                      child: const Text(
+                        'No address added yet.',
+                        style: TextStyle(color: TradeHubColors.textMuted),
+                      ),
                     )
                   : ListView.separated(
                       itemCount: widget.controller.addresses.length,
@@ -149,19 +160,22 @@ class _AddressPageState extends State<AddressPage> {
                         return Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: TradeHubColors.surface2,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.black12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor: Colors.teal.shade50,
+                                backgroundColor: TradeHubColors.success
+                                    .withValues(alpha: 0.22),
                                 child: const Icon(
                                   Icons.place_outlined,
-                                  color: Colors.teal,
+                                  color: TradeHubColors.success,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -173,13 +187,14 @@ class _AddressPageState extends State<AddressPage> {
                                       address.title,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w700,
+                                        color: TradeHubColors.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
                                       address.addressText,
                                       style: const TextStyle(
-                                        color: Colors.black87,
+                                        color: TradeHubColors.textMuted,
                                       ),
                                     ),
                                   ],
@@ -188,7 +203,10 @@ class _AddressPageState extends State<AddressPage> {
                               IconButton(
                                 onPressed: () =>
                                     widget.controller.removeAddress(address.id),
-                                icon: const Icon(Icons.delete_outline),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: TradeHubColors.textMuted,
+                                ),
                               ),
                             ],
                           ),

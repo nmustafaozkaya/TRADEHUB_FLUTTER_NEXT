@@ -38,11 +38,12 @@ const ORDER_TIMELINE_STEPS: TimelineStep[] = [
 ];
 
 function getActiveTimelineStep(status: number) {
+  if (status === ORDER_STATUS.REJECTED) return -1;
   if (status === ORDER_STATUS.PLACED) return 0;
   if (status === ORDER_STATUS.PREPARING) return 1;
   if (status === ORDER_STATUS.SHIPPED) return 2;
   if (status === ORDER_STATUS.DELIVERED) return 3;
-  if (status === ORDER_STATUS.COMPLETED) return 4;
+  if (status === ORDER_STATUS.COMPLETED) return 5;
   return 0;
 }
 
@@ -174,8 +175,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-400">Order progress</div>
                   <div className="flex w-full items-start justify-between">
                     {ORDER_TIMELINE_STEPS.map((step, idx) => {
-                      const isDone = idx <= activeStepIndex && order.Status !== ORDER_STATUS.REJECTED;
-                      const isCurrent = idx === activeStepIndex && order.Status !== ORDER_STATUS.REJECTED;
+                      const isDone = activeStepIndex >= 0 && idx < activeStepIndex;
+                      const isCurrent = activeStepIndex >= 0 && idx === activeStepIndex;
                       return (
                         <div key={step.key} className="flex flex-1 items-start">
                           <div className="flex w-full flex-col items-center text-center">
@@ -208,7 +209,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                           </div>
                           {idx < ORDER_TIMELINE_STEPS.length - 1 ? (
                             <div className="mt-4 h-0.5 flex-1 px-1 sm:px-2">
-                              <div className={`h-0.5 w-full ${idx < activeStepIndex ? "bg-emerald-500/80" : "bg-white/15"}`} />
+                              <div
+                                className={`h-0.5 w-full ${
+                                  activeStepIndex >= 0 && idx < activeStepIndex
+                                    ? "bg-emerald-500/80"
+                                    : "bg-white/15"
+                                }`}
+                              />
                             </div>
                           ) : null}
                         </div>
@@ -236,7 +243,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
             {order.Status === ORDER_STATUS.REJECTED ? (
               <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-                Rejection reason: {order.RejectReasonCode || "OTHER"} {order.RejectReasonNote ? `- ${order.RejectReasonNote}` : ""}
+                <span className="font-semibold text-rose-100">Rejection reason:</span>{" "}
+                {order.RejectReasonCode ? <span className="font-mono">{order.RejectReasonCode}</span> : "—"}
+                {order.RejectReasonNote ? (
+                  <>
+                    {" "}
+                    <span className="text-rose-100/90">— {order.RejectReasonNote}</span>
+                  </>
+                ) : null}
               </div>
             ) : null}
           </div>

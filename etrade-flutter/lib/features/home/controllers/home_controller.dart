@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/order_status.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../data/account_api_service.dart';
 import '../data/product_repository.dart';
@@ -19,19 +21,19 @@ class HomeController extends GetxController {
   static const _profileGenderKey = 'profile_gender';
   static const _profileBirthdateKey = 'profile_birthdate';
   static const _profilePhoneKey = 'profile_phone';
-  final categories = <String>[
-    'All',
+  /// Eight shop tiles + All — same order/labels as `etrade-next/src/lib/shopCategories.ts`.
+  static const shopCategoryTiles = <String>[
+    'Fresh Produce',
     'Beauty & Personal Care',
     'Home & Living',
-    'Candy & Sweets',
-    'Fresh Fruits',
-    'Vegetables',
-    'Pantry & Spices',
-    'Poultry & Eggs',
-    'Breakfast & Dairy',
+    'Snacks & Confectionery',
+    'Pantry & Staples',
+    'Meat, Poultry & Seafood',
+    'Dairy, Cheese & Eggs',
     'Toys & Games',
-    'Leafy Greens',
-  ].obs;
+  ];
+
+  final categories = <String>['All', ...shopCategoryTiles].obs;
 
   final selectedCategory = 'All'.obs;
   final searchText = ''.obs;
@@ -59,35 +61,35 @@ class HomeController extends GetxController {
   
 
   /// Fetches products from repository and updates UI states.
+  /// Category filter uses the web API (`shopCategories.ts` / SQL) — same buckets as `/items?category=`.
   Future<void> loadProducts() async {
     isLoading.value = true;
     errorMessage.value = '';
     try {
-      final fetchedProducts = await _repository.getProducts();
+      final cat =
+          selectedCategory.value.trim().toLowerCase() == 'all' ? null : selectedCategory.value;
+      final fetchedProducts = await _repository.getProducts(category: cat);
       products.assignAll(fetchedProducts);
-      _syncCategories(fetchedProducts);
       await _loadFavorites();
     } catch (e) {
-      errorMessage.value = 'Urunler yuklenemedi. Lutfen tekrar dene.';
+      errorMessage.value = 'Could not load products. Please try again.';
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Products shown according to selected category and search query.
+  /// Search only; category is applied server-side in [loadProducts].
   List<ProductItem> get filteredProducts {
     final normalizedSearch = searchText.value.trim().toLowerCase();
-    return products.where((product) {
-      final categoryMatch = _matchesSelectedCategory(product.category);
-      final searchMatch =
-          normalizedSearch.isEmpty ||
-          product.name.toLowerCase().contains(normalizedSearch);
-      return categoryMatch && searchMatch;
-    }).toList();
+    if (normalizedSearch.isEmpty) return products.toList();
+    return products
+        .where((product) => product.name.toLowerCase().contains(normalizedSearch))
+        .toList();
   }
 
   void changeCategory(String category) {
     selectedCategory.value = category;
+    loadProducts();
   }
 
   void updateSearch(String text) {
@@ -201,7 +203,8 @@ class HomeController extends GetxController {
       UserOrderItem(
         id: nextId,
         totalPrice: total,
-        statusText: 'Received',
+        status: OrderStatus.placed,
+        statusText: OrderStatus.label(OrderStatus.placed),
         dateLabel: '${now.year}-$month-$day',
       ),
     );
@@ -290,17 +293,60 @@ Future<int?> createOrder({
   Future<void> saveProfile(UserProfile newProfile) async {
     isSavingProfile.value = true;
     try {
-      profile.value = newProfile;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_profileNameKey, newProfile.fullName);
-      await prefs.setString(_profileEmailKey, newProfile.email);
-      await prefs.setString(_profileGenderKey, newProfile.gender);
-      await prefs.setString(_profileBirthdateKey, newProfile.birthdate);
-      await prefs.setString(_profilePhoneKey, newProfile.phone);
-      await _accountApiService.updateProfile(
+      final ok = await _accountApiService.updateProfile(
         newProfile,
         userId: _currentUserId(),
         username: _currentLogin(),
+      );
+      if (ok) {
+        profile.value = newProfile;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_profileNameKey, newProfile.fullName);
+        await prefs.setString(_profileEmailKey, newProfile.email);
+        await prefs.setString(_profileGenderKey, newProfile.gender);
+        await prefs.setString(_profileBirthdateKey, newProfile.birthdate);
+        await prefs.setString(_profilePhoneKey, newProfile.phone);
+        if (Get.isRegistered<AuthController>()) {
+          await Get.find<AuthController>().syncProfileFields(
+            nameSurname: newProfile.fullName,
+            email: newProfile.email,
+            gender: newProfile.gender,
+            birthdate: newProfile.birthdate,
+            phone: newProfile.phone,
+          );
+        }
+        Get.snackbar(
+          'Profile',
+          'Your profile has been saved.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF34D399),
+          colorText: const Color(0xFF0B1020),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        Get.snackbar(
+          'Profile',
+          'Could not save profile. Check your connection and try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFF87171),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          duration: const Duration(seconds: 4),
+        );
+      }
+    } catch (_) {
+      Get.snackbar(
+        'Profile',
+        'Could not save profile. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFF87171),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 4),
       );
     } finally {
       isSavingProfile.value = false;
@@ -385,8 +431,6 @@ Future<int?> createOrder({
     await _loadFavorites();
   }
 
-  void _syncCategories(List<ProductItem> list) {}
-
   Future<void> _loadLocalProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final auth = Get.isRegistered<AuthController>()
@@ -442,6 +486,15 @@ Future<int?> createOrder({
       username: _currentLogin(),
     );
   }
+
+  /// Customer confirms package received (shipped or delivered → completed).
+  Future<bool> confirmOrderDelivery(int orderId) async {
+    return _accountApiService.confirmOrderDelivery(
+      orderId,
+      userId: _currentUserId(),
+      username: _currentLogin(),
+    );
+  }
   
 
   Future<void> _loadOrders() async {
@@ -454,14 +507,13 @@ Future<int?> createOrder({
       );
       if (apiOrders == null) {
         orders.clear();
-        ordersErrorMessage.value =
-            'Siparişler yüklenemedi. Lütfen tekrar deneyin.';
+        ordersErrorMessage.value = 'Could not load orders. Please try again.';
         return;
       }
       orders.assignAll(apiOrders);
     } catch (error) {
       orders.clear();
-      ordersErrorMessage.value = 'Siparişler yüklenemedi. Lütfen tekrar deneyin.';
+      ordersErrorMessage.value = 'Could not load orders. Please try again.';
     } finally {
       isOrdersLoading.value = false;
     }
@@ -480,48 +532,5 @@ Future<int?> createOrder({
     if (username.isNotEmpty) return username;
     final email = auth.userEmail.value.trim();
     return email.isEmpty ? null : email;
-  }
-
-  bool _matchesSelectedCategory(String rawCategory) {
-    final selected = selectedCategory.value.toLowerCase();
-    if (selected == 'all') return true;
-    final category = rawCategory.toLowerCase();
-
-    if (category.contains(selected)) {
-      return true;
-    }
-
-    final aliases = <String, List<String>>{
-      'beauty & personal care': [
-        'beauty',
-        'personal care',
-        'kozmetik',
-        'bakim',
-      ],
-      'home & living': ['home', 'living', 'ev', 'yasam', 'mobilya'],
-      'candy & sweets': ['candy', 'sweet', 'seker', 'tatli', 'cikolata'],
-      'fresh fruits': ['fruit', 'meyve'],
-      'vegetables': ['vegetable', 'vegetables', 'sebze', 'veggie', 'veggies'],
-      'pantry & spices': ['pantry', 'spice', 'baharat', 'erzak', 'bakliyat'],
-      'poultry & eggs': ['poultry', 'egg', 'tavuk', 'yumurta'],
-      'breakfast & dairy': ['breakfast', 'dairy', 'kahvalti', 'sut', 'peynir'],
-      'toys & games': ['toy', 'game', 'oyuncak', 'oyun'],
-      'leafy greens': [
-        'leafy green',
-        'leafy greens',
-        'fresh green',
-        'fresh greens',
-        'green',
-        'greens',
-        'yesillik',
-        'salata',
-      ],
-    };
-
-    final keywords = aliases[selected];
-    if (keywords == null || keywords.isEmpty) {
-      return false;
-    }
-    return keywords.any(category.contains);
   }
 }

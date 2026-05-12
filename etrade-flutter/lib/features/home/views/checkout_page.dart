@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/home_controller.dart';
 import '../models/product_item.dart';
 import 'address_page.dart';
@@ -104,14 +105,47 @@ class _CheckoutPageState extends State<CheckoutPage> {
     const discount = 0.0;
     final total = subtotal + protection + shipping - discount;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        listTileTheme: const ListTileThemeData(
+          textColor: TradeHubColors.textPrimary,
+          iconColor: TradeHubColors.textMuted,
+        ),
+        radioTheme: RadioThemeData(
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return TradeHubColors.primary;
+            }
+            return TradeHubColors.textMuted;
+          }),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: TradeHubColors.surface,
+          labelStyle: const TextStyle(color: TradeHubColors.textMuted),
+          hintStyle: TextStyle(color: TradeHubColors.textMuted.withValues(alpha: 0.8)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: TradeHubColors.primary, width: 1.5),
+          ),
+        ),
+      ),
+      child: Scaffold(
+      backgroundColor: TradeHubColors.bg,
       appBar: AppBar(
         title: const Text('Secure checkout'),
-        backgroundColor: const Color(0xFFF8F9FB),
+        backgroundColor: TradeHubColors.bg,
         elevation: 0,
         scrolledUnderElevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: TradeHubColors.textPrimary,
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Icons.arrow_back),
@@ -128,20 +162,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: TradeHubColors.surface2,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.black12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.location_on_outlined, size: 20),
+                            const Icon(Icons.location_on_outlined, size: 20, color: TradeHubColors.accent),
                             const SizedBox(width: 8),
                             const Text(
                               'Delivery Address',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: TradeHubColors.textPrimary,
+                              ),
                             ),
                             const Spacer(),
                             TextButton(
@@ -157,7 +195,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         if (c.addresses.isEmpty)
                           const Text(
                             'No address saved. Please add an address.',
-                            style: TextStyle(color: Colors.red),
+                            style: TextStyle(color: TradeHubColors.danger),
                           )
                         else
                           RadioGroup<int>(
@@ -194,20 +232,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: TradeHubColors.surface2,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.black12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.payment_outlined, size: 20),
+                            Icon(Icons.payment_outlined, size: 20, color: TradeHubColors.primary),
                             SizedBox(width: 8),
                             Text(
                               'Payment Method',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: TradeHubColors.textPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -242,9 +284,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: TradeHubColors.surface2,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.black12),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +295,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             children: [
                               const Text(
                                 'Card Details',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: TradeHubColors.textPrimary,
+                                ),
                               ),
                               const Spacer(),
                               // Saved / New toggle
@@ -263,9 +309,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: const [
-                                    Text('Saved'),
+                                    Text('Saved', style: TextStyle(color: TradeHubColors.textMuted)),
                                     Radio<bool>(value: false),
-                                    Text('New'),
+                                    Text('New', style: TextStyle(color: TradeHubColors.textMuted)),
                                     Radio<bool>(value: true),
                                   ],
                                 ),
@@ -305,17 +351,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           else ...[
                             TextField(
                               controller: cardHolderController,
+                              style: const TextStyle(color: TradeHubColors.textPrimary),
                               decoration: const InputDecoration(
                                 labelText: 'Card Holder Name',
-                                border: OutlineInputBorder(),
                               ),
                             ),
                             const SizedBox(height: 12),
                             TextField(
                               controller: cardNumberController,
+                              style: const TextStyle(color: TradeHubColors.textPrimary),
                               decoration: const InputDecoration(
                                 labelText: 'Card Number',
-                                border: OutlineInputBorder(),
                               ),
                               keyboardType: TextInputType.number,
                             ),
@@ -325,9 +371,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 Expanded(
                                   child: TextField(
                                     controller: expiryController,
+                                    style: const TextStyle(color: TradeHubColors.textPrimary),
                                     decoration: const InputDecoration(
                                       labelText: 'Expiry (MM/YY)',
-                                      border: OutlineInputBorder(),
                                     ),
                                     keyboardType: TextInputType.datetime,
                                   ),
@@ -336,9 +382,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 Expanded(
                                   child: TextField(
                                     controller: cvvController,
+                                    style: const TextStyle(color: TradeHubColors.textPrimary),
                                     decoration: const InputDecoration(
                                       labelText: 'CVV',
-                                      border: OutlineInputBorder(),
                                     ),
                                     keyboardType: TextInputType.number,
                                   ),
@@ -365,16 +411,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: TradeHubColors.surface2,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.black12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Order Summary',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: TradeHubColors.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         _SummaryRow(
@@ -395,7 +445,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           label: 'Discount',
                           value: 'TRY ${discount.toStringAsFixed(2)}',
                         ),
-                        const Divider(),
+                        Divider(color: Colors.white.withValues(alpha: 0.08)),
                         _SummaryRow(
                           label: 'Total',
                           value: 'TRY ${total.toStringAsFixed(2)}',
@@ -410,9 +460,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             // Alt Buton
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Colors.black12)),
+              decoration: BoxDecoration(
+                color: TradeHubColors.surface,
+                border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
               ),
               child: SizedBox(
                 width: double.infinity,
@@ -475,6 +525,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -490,7 +541,10 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = bold ? const TextStyle(fontWeight: FontWeight.w700) : const TextStyle();
+    final style = TextStyle(
+      fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+      color: TradeHubColors.textPrimary,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
@@ -515,7 +569,7 @@ class _OrderPlacedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: TradeHubColors.bg,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -527,10 +581,10 @@ class _OrderPlacedPage extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF34C759),
+                    color: TradeHubColors.success,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
+                  child: const Icon(Icons.check_rounded, color: Color(0xFF0B1020), size: 48),
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -538,27 +592,27 @@ class _OrderPlacedPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF1C1C1E),
+                    color: TradeHubColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Order #$orderId has been\nsuccessfully placed.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, color: Colors.black54),
+                  style: TextStyle(fontSize: 15, color: TradeHubColors.textMuted.withValues(alpha: 0.95)),
                 ),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: () {
                       controller.changeBottomTab(0);
                       Get.offAll(() => const HomeScreen());
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007AFF),
-                      foregroundColor: Colors.white,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: TradeHubColors.primaryDeep,
+                      foregroundColor: TradeHubColors.textPrimary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),

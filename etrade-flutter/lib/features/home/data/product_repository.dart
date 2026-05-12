@@ -8,7 +8,7 @@ class ProductRepository {
 
   final ProductApiService _apiService;
 
-  Future<List<ProductItem>> getProducts() {
-    return _apiService.fetchProducts();
+  Future<List<ProductItem>> getProducts({String? category}) {
+    return _apiService.fetchProducts(category: category);
   }
 }

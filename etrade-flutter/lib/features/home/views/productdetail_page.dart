@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../models/product_item.dart';
 import 'checkout_page.dart';
+import '../../../theme/tradehub_theme.dart';
 
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({
@@ -65,7 +66,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final isFav = widget.controller.favoriteProductIds.contains(p.id);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: TradeHubColors.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -123,6 +124,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
+                          color: TradeHubColors.textPrimary,
                         ),
                       ),
                     ),
@@ -147,7 +149,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             child: Container(
                               width: 120,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: TradeHubColors.surface2,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Column(
@@ -164,10 +166,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       fit: BoxFit.contain,
                                       errorBuilder: (_, _, _) => Container(
                                         height: 80,
-                                        color: Colors.grey.shade100,
+                                        color: TradeHubColors.panel,
                                         child: const Icon(
                                           Icons.image_outlined,
-                                          color: Colors.black26,
+                                          color: TradeHubColors.textMuted,
                                         ),
                                       ),
                                     ),
@@ -185,6 +187,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                           style: const TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,
+                                            color: TradeHubColors.textPrimary,
                                           ),
                                         ),
                                         const SizedBox(height: 3),
@@ -192,7 +195,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                           'TRY ${r.price.toStringAsFixed(0)}',
                                           style: const TextStyle(
                                             fontSize: 11,
-                                            color: Colors.black54,
+                                            color: TradeHubColors.textMuted,
                                           ),
                                         ),
                                       ],
@@ -239,7 +242,7 @@ class _AppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: TradeHubColors.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
@@ -249,17 +252,25 @@ class _AppBar extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F7),
+                color: TradeHubColors.bg,
                 borderRadius: BorderRadius.circular(17),
               ),
-              child: const Icon(Icons.arrow_back_ios_new, size: 16),
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                size: 16,
+                color: TradeHubColors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'Product',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: TradeHubColors.textPrimary,
+              ),
             ),
           ),
           Obx(() {
@@ -271,13 +282,13 @@ class _AppBar extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F7),
+                  color: TradeHubColors.bg,
                   borderRadius: BorderRadius.circular(17),
                 ),
                 child: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_outline,
                   size: 18,
-                  color: isFavorite ? Colors.red : Colors.black54,
+                  color: isFavorite ? Colors.redAccent : TradeHubColors.textMuted,
                 ),
               ),
             );
@@ -287,13 +298,13 @@ class _AppBar extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: const Color(0xFFF2F2F7),
+              color: TradeHubColors.bg,
               borderRadius: BorderRadius.circular(17),
             ),
             child: const Icon(
               Icons.ios_share_outlined,
               size: 16,
-              color: Colors.black54,
+              color: TradeHubColors.textMuted,
             ),
           ),
         ],
@@ -312,8 +323,9 @@ class _ImageCard extends StatelessWidget {
     return Container(
       height: 240,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TradeHubColors.surface2,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Stack(
         children: [
@@ -325,10 +337,10 @@ class _ImageCard extends StatelessWidget {
                 fit: BoxFit.contain,
                 width: double.infinity,
                 height: 240,
-                errorBuilder: (_, _, _) => const Icon(
+                errorBuilder: (_, _, _) => Icon(
                   Icons.image_outlined,
                   size: 64,
-                  color: Colors.black26,
+                  color: TradeHubColors.textMuted,
                 ),
               ),
             ),
@@ -400,8 +412,9 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TradeHubColors.surface2,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,14 +434,14 @@ class _InfoCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF1C1C1E),
+              color: TradeHubColors.textPrimary,
               height: 1.2,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             'Code: ${product.id} · Brand: $brand',
-            style: const TextStyle(fontSize: 13, color: Colors.black45),
+            style: const TextStyle(fontSize: 13, color: TradeHubColors.textMuted),
           ),
           const SizedBox(height: 14),
           Row(
@@ -439,7 +452,7 @@ class _InfoCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1C1C1E),
+                  color: TradeHubColors.accent,
                 ),
               ),
             ],
@@ -451,7 +464,7 @@ class _InfoCard extends StatelessWidget {
               // Qty selector
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F7),
+                  color: TradeHubColors.bg,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -459,7 +472,7 @@ class _InfoCard extends StatelessWidget {
                     IconButton(
                       onPressed: qty > 1 ? () => onQtyChanged(qty - 1) : null,
                       icon: const Icon(Icons.remove),
-                      color: const Color(0xFF007AFF),
+                      color: TradeHubColors.accent,
                       iconSize: 20,
                       padding: const EdgeInsets.all(8),
                       constraints: const BoxConstraints(
@@ -475,13 +488,14 @@ class _InfoCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
+                          color: TradeHubColors.textPrimary,
                         ),
                       ),
                     ),
                     IconButton(
                       onPressed: () => onQtyChanged(qty + 1),
                       icon: const Icon(Icons.add),
-                      color: const Color(0xFF007AFF),
+                      color: TradeHubColors.accent,
                       iconSize: 20,
                       padding: const EdgeInsets.all(8),
                       constraints: const BoxConstraints(
@@ -499,7 +513,7 @@ class _InfoCard extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF34C759),
+                      color: TradeHubColors.success,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -508,7 +522,7 @@ class _InfoCard extends StatelessWidget {
                     'In stock',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF34C759),
+                      color: TradeHubColors.success,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -534,8 +548,8 @@ class _Pill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: isBlue
-            ? const Color(0xFFE3F2FD)
-            : const Color(0xFFF2F2F7),
+            ? TradeHubColors.primary.withValues(alpha: 0.22)
+            : TradeHubColors.bg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -543,7 +557,7 @@ class _Pill extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: isBlue ? const Color(0xFF1565C0) : const Color(0xFF636366),
+          color: isBlue ? TradeHubColors.primary : TradeHubColors.textMuted,
         ),
       ),
     );
@@ -567,20 +581,25 @@ class _SpecsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TradeHubColors.surface2,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Product details',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: TradeHubColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF9F9FB),
+              color: TradeHubColors.panel,
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -598,7 +617,7 @@ class _SpecsCard extends StatelessWidget {
                             row.$1,
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Colors.black54,
+                              color: TradeHubColors.textMuted,
                             ),
                           ),
                           Text(
@@ -606,14 +625,14 @@ class _SpecsCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1C1C1E),
+                              color: TradeHubColors.textPrimary,
                             ),
                           ),
                         ],
                       ),
                     ),
                     if (!isLast)
-                      const Divider(height: 0, thickness: 0.5, color: Color(0xFFF2F2F7)),
+                      Divider(height: 0, thickness: 0.5, color: Colors.white.withValues(alpha: 0.08)),
                   ],
                 );
               }).toList(),
@@ -641,20 +660,25 @@ class _ProtectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TradeHubColors.surface2,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'TradeHub Protection',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: TradeHubColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 4),
           const Text(
             'Extended warranty plans for this item',
-            style: TextStyle(fontSize: 12, color: Colors.black45),
+            style: TextStyle(fontSize: 12, color: TradeHubColors.textMuted),
           ),
           const SizedBox(height: 12),
           ...plans.map((plan) {
@@ -671,12 +695,12 @@ class _ProtectionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF007AFF)
-                        : const Color(0xFFE5E5EA),
+                        ? TradeHubColors.accent
+                        : const Color(0x33FFFFFF),
                     width: isSelected ? 1.5 : 1,
                   ),
                   color: isSelected
-                      ? const Color(0xFFF0F7FF)
+                      ? const Color(0x26818CF8)
                       : Colors.transparent,
                 ),
                 child: Row(
@@ -690,14 +714,14 @@ class _ProtectionCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1C1C1E),
+                              color: TradeHubColors.textPrimary,
                             ),
                           ),
                           const Text(
                             'Coverage for accidental damage',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black45,
+                              color: TradeHubColors.textMuted,
                             ),
                           ),
                         ],
@@ -708,7 +732,7 @@ class _ProtectionCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF007AFF),
+                        color: TradeHubColors.accent,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -717,8 +741,8 @@ class _ProtectionCard extends StatelessWidget {
                           ? Icons.check_circle
                           : Icons.radio_button_unchecked,
                       color: isSelected
-                          ? const Color(0xFF007AFF)
-                          : const Color(0xFFCCCCCC),
+                          ? TradeHubColors.accent
+                          : TradeHubColors.textMuted,
                       size: 20,
                     ),
                   ],
@@ -748,8 +772,11 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: TradeHubColors.surface,
+        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -764,21 +791,22 @@ class _BottomBar extends StatelessWidget {
                       protectionPrice!,
                     );
                   }
+                  controller.changeBottomTab(2);
                   Get.back();
                   Get.snackbar(
                     'Cart',
                     '$qty item(s) added',
                     snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.black87,
-                    colorText: Colors.white,
+                    backgroundColor: TradeHubColors.surface2,
+                    colorText: TradeHubColors.textPrimary,
                     borderRadius: 12,
                     margin: const EdgeInsets.all(16),
                     duration: const Duration(seconds: 2),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007AFF),
-                  foregroundColor: Colors.white,
+                  backgroundColor: TradeHubColors.accent,
+                  foregroundColor: TradeHubColors.bg,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -810,7 +838,7 @@ class _BottomBar extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1C1C1E),
+                  backgroundColor: TradeHubColors.textPrimary,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(

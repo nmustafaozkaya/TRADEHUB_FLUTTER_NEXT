@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../models/product_item.dart';
 import 'checkout_page.dart';
+import '../../../theme/tradehub_theme.dart';
 import 'home_shared_widgets.dart';
 
 class CartPage extends StatelessWidget {
@@ -45,14 +46,18 @@ class CartPage extends StatelessWidget {
 
         return ListView(
           children: [
-            Text(
+            const Text(
               'Cart',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: TradeHubColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               '${cartItems.length} items',
-              style: const TextStyle(color: Colors.black54),
+              style: const TextStyle(color: TradeHubColors.textMuted),
             ),
             const SizedBox(height: 10),
             Row(
@@ -75,12 +80,13 @@ class CartPage extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: TradeHubColors.surface2,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: const Text(
                   'Your cart is empty for now. Add products from item details.',
+                  style: TextStyle(color: TradeHubColors.textMuted),
                 ),
               ),
             ...cartItems.map((row) {
@@ -100,9 +106,9 @@ class CartPage extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: TradeHubColors.surface2,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,14 +119,16 @@ class CartPage extends StatelessWidget {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color: TradeHubColors.panel,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Image.network(
                             p.imageUrl,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) =>
-                                const Icon(Icons.image_outlined),
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.image_outlined,
+                              color: TradeHubColors.textMuted,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -134,14 +142,21 @@ class CartPage extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
+                                  color: TradeHubColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text('TRY ${p.price.toStringAsFixed(2)}'),
+                              Text(
+                                'TRY ${p.price.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: TradeHubColors.accent,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                               const SizedBox(height: 2),
                               Text(
                                 '•  Line: TRY ${lineTotal.toStringAsFixed(2)}',
-                                style: const TextStyle(color: Colors.black54),
+                                style: const TextStyle(color: TradeHubColors.textMuted),
                               ),
                             ],
                           ),
@@ -157,7 +172,10 @@ class CartPage extends StatelessWidget {
                         ),
                         Text(
                           '$qty',
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: TradeHubColors.textPrimary,
+                          ),
                         ),
                         IconButton(
                           onPressed: () => controller.addToCart(p.id),
@@ -173,11 +191,14 @@ class CartPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       const Text(
                         'TradeHub Protection',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: TradeHubColors.textPrimary,
+                        ),
                       ),
                       const Text(
                         'Home essentials protection (UI preview).',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                        style: TextStyle(color: TradeHubColors.textMuted, fontSize: 12),
                       ),
                       const SizedBox(height: 6),
                       ...[
@@ -191,11 +212,14 @@ class CartPage extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(plan.title),
+                                  Text(
+                                    plan.title,
+                                    style: const TextStyle(color: TradeHubColors.textPrimary),
+                                  ),
                                   const Text(
                                     'Protection plan preview for this item.',
                                     style: TextStyle(
-                                      color: Colors.black54,
+                                      color: TradeHubColors.textMuted,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -203,6 +227,7 @@ class CartPage extends StatelessWidget {
                                     'TRY ${plan.price.toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
+                                      color: TradeHubColors.accent,
                                     ),
                                   ),
                                 ],
@@ -229,9 +254,9 @@ class CartPage extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: TradeHubColors.surface2,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,6 +266,7 @@ class CartPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        color: TradeHubColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -274,7 +300,7 @@ class CartPage extends StatelessWidget {
                     const SizedBox(height: 6),
                     const Text(
                       'Checkout will create an order record in the database (MVP).',
-                      style: TextStyle(color: Colors.black54, fontSize: 12),
+                      style: TextStyle(color: TradeHubColors.textMuted, fontSize: 12),
                     ),
                   ],
                 ),

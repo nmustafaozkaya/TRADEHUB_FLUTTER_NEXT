@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/auth_controller.dart';
 import 'register_screen.dart';
 
@@ -27,21 +28,27 @@ class _LoginScreenState extends State<LoginScreen> {
     }) {
       return InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: TradeHubColors.textMuted),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: TradeHubColors.surface2,
+        labelStyle: const TextStyle(color: TradeHubColors.textMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: TradeHubColors.accent, width: 1.5),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: TradeHubColors.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -65,17 +72,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'TradeHub',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: TradeHubColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
                       'Sign in to your account',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: TradeHubColors.textMuted),
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _loginController,
+                      style: const TextStyle(color: TradeHubColors.textPrimary),
                       decoration: modernInput(
                         label: 'Username or email',
                         icon: Icons.alternate_email_rounded,
@@ -91,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
+                      style: const TextStyle(color: TradeHubColors.textPrimary),
                       decoration: modernInput(
                         label: 'Password',
                         icon: Icons.lock_outline_rounded,
@@ -125,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          backgroundColor: const Color(0xFF4F46E5),
+                          backgroundColor: TradeHubColors.primaryDeep,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -137,7 +150,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: () => Get.to(() => const RegisterScreen()),
-                      child: const Text('No account yet? Create one'),
+                      child: const Text(
+                        'No account yet? Create one',
+                        style: TextStyle(color: TradeHubColors.accent),
+                      ),
                     ),
                   ],
                 ),

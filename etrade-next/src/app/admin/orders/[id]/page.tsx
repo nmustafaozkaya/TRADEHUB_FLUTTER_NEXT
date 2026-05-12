@@ -38,10 +38,10 @@ type AdminOrderLine = {
 
 const CARGO_OPTIONS = ["Yurtiçi Kargo", "Aras Kargo", "MNG Kargo", "PTT Kargo", "Sürat Kargo"];
 const REJECT_OPTIONS = [
-  { code: "LOW_STOCK", label: "Stok yok" },
-  { code: "PRICE_CHANGED", label: "Fiyat değişti" },
-  { code: "DAMAGED", label: "Ürün hasarlı" },
-  { code: "OTHER", label: "Diğer" },
+  { code: "LOW_STOCK", label: "Out of stock" },
+  { code: "PRICE_CHANGED", label: "Price changed" },
+  { code: "DAMAGED", label: "Damaged product" },
+  { code: "OTHER", label: "Other" },
 ];
 
 const ORDER_TIMELINE = [
@@ -78,6 +78,8 @@ export default function AdminOrderDetailPage() {
   const [showRejectPanel, setShowRejectPanel] = useState(false);
   const [rejectCode, setRejectCode] = useState(REJECT_OPTIONS[0].code);
   const [rejectNote, setRejectNote] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [actionBusy, setActionBusy] = useState(false);
 
   useEffect(() => {
     const isAdminLoggedIn = sessionStorage.getItem("admin-auth") === "ok";
@@ -130,6 +132,7 @@ export default function AdminOrderDetailPage() {
     cargoCompany?: string;
     trackingNo?: string;
   }) => {
+    setActionError("");
     const res = await fetch(`/api/admin/orders/${orderId}/status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -148,10 +151,10 @@ export default function AdminOrderDetailPage() {
   const shippingInfoText =
     order?.ShippingInfoNote ||
     (order?.ShippedNote && order.ShippedNote !== "Shipped by admin." ? order.ShippedNote : "");
-  const activeStepIndex = Math.max(
-    0,
-    ORDER_TIMELINE.findIndex((s) => s.status === order?.Status)
-  );
+  const activeStepIndex =
+    order?.Status === ORDER_STATUS.REJECTED
+      ? -1
+      : Math.max(0, ORDER_TIMELINE.findIndex((s) => s.status === order?.Status));
 
   if (!ready || loading) {
     return <div className="p-6 text-sm text-slate-300">Loading order details...</div>;
@@ -182,7 +185,20 @@ export default function AdminOrderDetailPage() {
           <div><div className="text-xs text-slate-400">Order No</div><div className="text-sm text-slate-100">#{order.ID}</div></div>
           <div><div className="text-xs text-slate-400">Order Date</div><div className="text-sm text-slate-100">{order.Date ? new Date(order.Date).toLocaleString() : "-"}</div></div>
           <div><div className="text-xs text-slate-400">Order Summary</div><div className="text-sm text-slate-100">1 package, {lines.length} items</div></div>
-          <div><div className="text-xs text-slate-400">Order Status</div><div className="text-sm text-emerald-300">{statusDetailText(order.Status)}</div></div>
+          <div>
+            <div className="text-xs text-slate-400">Order Status</div>
+            <div
+              className={`text-sm ${
+                order.Status === ORDER_STATUS.REJECTED
+                  ? "text-rose-300"
+                  : order.Status === ORDER_STATUS.COMPLETED
+                    ? "text-emerald-300"
+                    : "text-sky-200"
+              }`}
+            >
+              {statusDetailText(order.Status)}
+            </div>
+          </div>
           <div><div className="text-xs text-slate-400">Total</div><div className="text-sm font-semibold text-slate-100">{formatTry(order.TotalPrice)}</div></div>
           <div className="text-right">
             <button type="button" className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800">
@@ -200,7 +216,7 @@ export default function AdminOrderDetailPage() {
           <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-400">Order progress</div>
           <div className="flex w-full items-start">
             {ORDER_TIMELINE.map((step, idx) => {
-              const isDone = idx <= activeStepIndex && order.Status !== ORDER_STATUS.REJECTED;
+              const isDone = activeStepIndex >= 0 && idx < activeStepIndex;
               return (
                 <div key={step.status} className="flex flex-1 items-start">
                   <div className="flex w-full flex-col items-center text-center">
@@ -219,7 +235,11 @@ export default function AdminOrderDetailPage() {
                   </div>
                   {idx < ORDER_TIMELINE.length - 1 ? (
                     <div className="mt-4 h-0.5 flex-1 px-1 sm:px-2">
-                      <div className={`h-0.5 w-full ${idx < activeStepIndex ? "bg-emerald-500/80" : "bg-white/15"}`} />
+                      <div
+                        className={`h-0.5 w-full ${
+                          activeStepIndex >= 0 && idx < activeStepIndex ? "bg-emerald-500/80" : "bg-white/15"
+                        }`}
+                      />
                     </div>
                   ) : null}
                 </div>
@@ -297,7 +317,7 @@ export default function AdminOrderDetailPage() {
                   status: ORDER_STATUS.SHIPPED,
                   cargoCompany,
                   trackingNo,
-                  note: `Kargo: ${cargoCompany} | Tracking: ${trackingNo}`,
+                  note: `Cargo: ${cargoCompany} | Tracking: ${trackingNo}`,
                 });
                 setShowShippingPanel(false);
               }}
@@ -324,22 +344,46 @@ export default function AdminOrderDetailPage() {
             <input
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
-              placeholder="Açıklama (opsiyonel)"
+              placeholder="Optional note for the customer"
               className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
             />
             <button
-              onClick={() =>
-                void updateStatus({
-                  status: ORDER_STATUS.REJECTED,
-                  rejectReasonCode: rejectCode,
-                  rejectReasonNote: rejectNote || null,
-                  note: `Rejected: ${rejectCode}${rejectNote ? ` - ${rejectNote}` : ""}`,
-                })
-              }
-              className="rounded bg-rose-500 px-3 py-2 text-xs font-semibold text-rose-950"
+              type="button"
+              disabled={actionBusy}
+              onClick={() => {
+                void (async () => {
+                  setActionBusy(true);
+                  setActionError("");
+                  try {
+                    await updateStatus({
+                      status: ORDER_STATUS.REJECTED,
+                      rejectReasonCode: rejectCode,
+                      rejectReasonNote: rejectNote.trim() ? rejectNote.trim() : undefined,
+                      note: `Rejected: ${rejectCode}${rejectNote.trim() ? ` - ${rejectNote.trim()}` : ""}`,
+                    });
+                    setShowRejectPanel(false);
+                    setRejectNote("");
+                  } catch (e) {
+                    setActionError(e instanceof Error ? e.message : "Reject failed.");
+                  } finally {
+                    setActionBusy(false);
+                  }
+                })();
+              }}
+              className="rounded bg-rose-500 px-3 py-2 text-xs font-semibold text-rose-950 disabled:opacity-50"
             >
-              Confirm Reject
+              {actionBusy ? "Saving…" : "Confirm Reject"}
             </button>
+            {actionError ? <p className="col-span-full text-xs text-rose-300">{actionError}</p> : null}
+          </div>
+        ) : null}
+
+        {order.Status === ORDER_STATUS.REJECTED &&
+        (order.RejectReasonCode || order.RejectReasonNote) ? (
+          <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+            <span className="font-semibold text-rose-100">Recorded rejection:</span>{" "}
+            {order.RejectReasonCode ? <span className="font-mono">{order.RejectReasonCode}</span> : "—"}
+            {order.RejectReasonNote ? <span className="text-rose-100/90"> — {order.RejectReasonNote}</span> : null}
           </div>
         ) : null}
       </section>

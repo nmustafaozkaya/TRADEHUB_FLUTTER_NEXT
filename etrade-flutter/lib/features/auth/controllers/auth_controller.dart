@@ -141,6 +141,34 @@ class AuthController extends GetxController {
     return true;
   }
 
+  /// Keeps session prefs and reactive fields in sync after a profile update from [HomeController.saveProfile].
+  Future<void> syncProfileFields({
+    required String nameSurname,
+    required String email,
+    required String gender,
+    required String birthdate,
+    required String phone,
+  }) async {
+    final name = nameSurname.trim();
+    final mail = email.trim();
+    final gen = gender.trim();
+    final birth = birthdate.trim();
+    final tel = phone.trim();
+
+    userName.value = name;
+    userEmail.value = mail;
+    userGender.value = gen;
+    userBirthdate.value = birth;
+    userPhone.value = tel;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_nameKey, name);
+    await prefs.setString(_emailKey, mail);
+    await prefs.setString(_genderKey, gen);
+    await prefs.setString(_birthdateKey, birth);
+    await prefs.setString(_phoneKey, tel);
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_sessionKey, false);

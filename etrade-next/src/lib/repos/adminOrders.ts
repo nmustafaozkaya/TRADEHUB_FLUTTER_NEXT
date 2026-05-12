@@ -1,5 +1,6 @@
 import { getPool, query, sql } from "../db";
 import { ORDER_STATUS } from "../orderStatus";
+import { parseRejectFromHistoryNote } from "./ordersHistory";
 
 export type AdminOrderListItem = {
   ID: number;
@@ -124,7 +125,14 @@ export async function getOrderDetailForAdmin(orderId: number): Promise<AdminOrde
             OR h.NOTE LIKE '%Tracking no:%'
           )
         ORDER BY h.CHANGED_AT DESC, h.ID DESC
-      ) AS ShippingInfoNote
+      ) AS ShippingInfoNote,
+      (
+        SELECT TOP (1) h.NOTE
+        FROM dbo.ORDER_STATUS_HISTORY h
+        WHERE h.ORDER_ID = o.ID
+          AND h.NEW_STATUS = ${ORDER_STATUS.REJECTED}
+        ORDER BY h.CHANGED_AT DESC, h.ID DESC
+      ) AS RejectHistoryNote
     FROM dbo.ORDERS o
     LEFT JOIN dbo.USERS u ON u.ID = o.USERID
     LEFT JOIN dbo.ADDRESS a ON a.ID = o.ADDRESSID
@@ -136,6 +144,8 @@ export async function getOrderDetailForAdmin(orderId: number): Promise<AdminOrde
   );
   const r = rows[0];
   if (!r) return null;
+  const rejectRaw = (r as AdminOrderDetail & { RejectHistoryNote?: string | null }).RejectHistoryNote;
+  const parsed = parseRejectFromHistoryNote(rejectRaw ?? null);
   return {
     ...r,
     ID: Number(r.ID),
@@ -143,8 +153,8 @@ export async function getOrderDetailForAdmin(orderId: number): Promise<AdminOrde
     TotalPrice: Number(r.TotalPrice ?? 0),
     Status: Number(r.Status ?? 0),
     Date: r.Date ? new Date(r.Date) : null,
-    RejectReasonCode: null,
-    RejectReasonNote: null,
+    RejectReasonCode: parsed.RejectReasonCode,
+    RejectReasonNote: parsed.RejectReasonNote ?? (rejectRaw?.trim() || null),
     CargoCompany: null,
     TrackingNo: null,
     ApprovedAt: null,

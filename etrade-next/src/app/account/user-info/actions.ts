@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { setUser } from "@/lib/auth";
 import { requireAuth } from "@/lib/requireAuth";
 import { changeUserPasswordById, updateUserProfileById } from "@/lib/repos/users";
@@ -46,6 +48,9 @@ export async function updateUserInfoAction(
     username: updated.username,
     nameSurname: updated.nameSurname,
   });
+
+  revalidatePath("/account");
+  revalidatePath("/account/user-info");
 
   return { error: null, success: "Your profile has been updated." };
 }

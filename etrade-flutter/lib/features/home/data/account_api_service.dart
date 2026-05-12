@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/order_status.dart';
 import '../models/account_models.dart';
 
 /// Account API bridge for mobile app modules.
@@ -67,13 +68,16 @@ class AccountApiService {
       final list = (map['orders'] as List<dynamic>? ?? <dynamic>[]);
       return list.map((raw) {
         final json = raw as Map<String, dynamic>;
+        final st = (json['status'] as num?)?.toInt();
         return UserOrderItem(
           id: (json['id'] as num?)?.toInt() ?? 0,
           totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0,
-          statusText: (json['statusLabel'] ?? json['status'] ?? 'Unknown')
-              .toString(),
+          statusText: OrderStatus.displayLabel(
+            status: st,
+            statusText: (json['statusLabel'] ?? json['statusText'])?.toString(),
+          ),
           dateLabel: (json['date'] ?? '-').toString(),
-          status: (json['status'] as num?)?.toInt(),
+          status: st,
           cargoCompany: json['cargoCompany']?.toString(),
           trackingNo: json['trackingNo']?.toString(),
           addressText: json['addressText']?.toString(),
@@ -117,6 +121,25 @@ Future<UserOrderDetail?> fetchOrderDetail(
     return null;
   }
 }
+
+  /// Marks order completed after customer confirms receipt (same as web `ConfirmDeliveryButton`).
+  Future<bool> confirmOrderDelivery(
+    int orderId, {
+    int? userId,
+    String? username,
+  }) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$_baseUrl/api/account/orders/$orderId/confirm-delivery'),
+        headers: _headers(userId: userId, username: username, json: false),
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) return false;
+      final map = jsonDecode(response.body) as Map<String, dynamic>?;
+      return map != null && map['ok'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<List<UserAddress>> fetchAddresses({
     int? userId,

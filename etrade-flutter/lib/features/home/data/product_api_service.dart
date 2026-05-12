@@ -14,13 +14,20 @@ class ProductApiService {
   // iOS simulator: http://localhost:3000
   static const _apiBaseUrl = 'http://10.0.2.2:3000';
 
-  /// Gets all products and maps them to app model.
-  Future<List<ProductItem>> fetchProducts() async {
-    final response = await _client.get(
-      Uri.parse('$_apiBaseUrl/api/items?page=1&pageSize=2000'),
-    );
+  /// Gets products from the same `/api/items` route as the web shop (optional [category] = `SHOP_CATEGORIES` label).
+  Future<List<ProductItem>> fetchProducts({String? category}) async {
+    final params = <String, String>{
+      'page': '1',
+      'pageSize': '10000',
+    };
+    final c = category?.trim();
+    if (c != null && c.isNotEmpty && c.toLowerCase() != 'all') {
+      params['category'] = c;
+    }
+    final uri = Uri.parse('$_apiBaseUrl/api/items').replace(queryParameters: params);
+    final response = await _client.get(uri);
     if (response.statusCode != 200) {
-      throw Exception('Urunler alinamadi. Kod: ${response.statusCode}');
+      throw Exception('Could not load products (HTTP ${response.statusCode}).');
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;

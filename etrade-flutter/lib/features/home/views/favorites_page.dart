@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/home_controller.dart';
 
 class FavoritesPage extends StatelessWidget {
@@ -17,7 +18,12 @@ class FavoritesPage extends StatelessWidget {
             .where((p) => controller.favoriteProductIds.contains(p.id))
             .toList();
         if (favProducts.isEmpty) {
-          return const Center(child: Text('No favorite items yet.'));
+          return const Center(
+            child: Text(
+              'No favorite items yet.',
+              style: TextStyle(color: TradeHubColors.textMuted),
+            ),
+          );
         }
 
         return Column(
@@ -25,7 +31,11 @@ class FavoritesPage extends StatelessWidget {
           children: [
             const Text(
               'Favorites',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: TradeHubColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 12),
             Expanded(
@@ -38,22 +48,26 @@ class FavoritesPage extends StatelessWidget {
                   return ListTile(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: Colors.black12),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                     ),
-                    tileColor: Colors.white,
+                    tileColor: TradeHubColors.surface2,
                     leading: CircleAvatar(
-                      backgroundColor: Colors.grey.shade100,
-                      child: const Icon(Icons.favorite, color: Colors.red),
+                      backgroundColor: TradeHubColors.panel,
+                      child: const Icon(Icons.favorite, color: Colors.redAccent),
                     ),
                     title: Text(
                       p.name,
                       maxLines: 1,
+                      style: const TextStyle(color: TradeHubColors.textPrimary),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text('${p.price.toStringAsFixed(0)} TL'),
+                    subtitle: Text(
+                      'TRY ${p.price.toStringAsFixed(0)}',
+                      style: const TextStyle(color: TradeHubColors.accent),
+                    ),
                     trailing: IconButton(
                       onPressed: () => controller.toggleFavorite(p.id),
-                      icon: const Icon(Icons.delete_outline),
+                      icon: const Icon(Icons.delete_outline, color: TradeHubColors.textMuted),
                     ),
                   );
                 },

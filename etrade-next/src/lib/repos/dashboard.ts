@@ -24,6 +24,27 @@ export async function listTopCategories(limit = 8) {
     .filter((r) => r.Category);
 }
 
+/** Every distinct CATEGORY1 with counts (no TOP) — used for shop-wide category chips. */
+export async function listAllCategory1Counts() {
+  const rows = await query<TopCategoryRow>(
+    `
+    SELECT
+      LTRIM(RTRIM(CATEGORY1)) AS Category,
+      COUNT(*) AS Cnt
+    FROM dbo.ITEMS
+    WHERE ISACTIVE = 1
+      AND CATEGORY1 IS NOT NULL
+      AND LTRIM(RTRIM(CATEGORY1)) <> ''
+    GROUP BY LTRIM(RTRIM(CATEGORY1))
+    ORDER BY COUNT(*) DESC, LTRIM(RTRIM(CATEGORY1)) ASC;
+    `
+  );
+
+  return rows
+    .map((r) => ({ Category: String(r.Category), Cnt: Number(r.Cnt) }))
+    .filter((r) => r.Category);
+}
+
 export type BestSellerRow = ItemRow & { SoldQty: number };
 
 export async function listBestSellers(limit = 10) {

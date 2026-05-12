@@ -118,6 +118,8 @@ class UserOrderDetail {
     this.addressText,
     this.city,
     this.town,
+    this.rejectReasonCode,
+    this.rejectReasonNote,
   });
 
   final int id;
@@ -133,6 +135,9 @@ class UserOrderDetail {
   final String? addressText;
   final String? city;
   final String? town;
+  /// From server when status is rejected (see `orderStatus.ts`).
+  final String? rejectReasonCode;
+  final String? rejectReasonNote;
 
   double get total => subtotal + shippingFee;
 
@@ -166,6 +171,8 @@ class UserOrderDetail {
       addressText: json['addressText']?.toString(),
       city: json['city']?.toString(),
       town: json['town']?.toString(),
+      rejectReasonCode: json['rejectReasonCode']?.toString(),
+      rejectReasonNote: json['rejectReasonNote']?.toString(),
     );
   }
 

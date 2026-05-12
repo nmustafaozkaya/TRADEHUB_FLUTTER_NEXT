@@ -1,4 +1,26 @@
 import { query } from "../db";
+import { ORDER_STATUS } from "../orderStatus";
+
+export function parseRejectFromHistoryNote(note: string | null | undefined): {
+  RejectReasonCode: string | null;
+  RejectReasonNote: string | null;
+} {
+  const raw = (note ?? "").trim();
+  if (!raw) return { RejectReasonCode: null, RejectReasonNote: null };
+  const lower = raw.toLowerCase();
+  if (!lower.startsWith("rejected:")) {
+    return { RejectReasonCode: null, RejectReasonNote: raw };
+  }
+  const rest = raw.slice("Rejected:".length).trim();
+  const dash = rest.indexOf(" - ");
+  if (dash === -1) {
+    return { RejectReasonCode: rest || null, RejectReasonNote: null };
+  }
+  return {
+    RejectReasonCode: rest.slice(0, dash).trim() || null,
+    RejectReasonNote: rest.slice(dash + 3).trim() || null,
+  };
+}
 
 export type OrderRow = {
   ID: number;
@@ -92,7 +114,14 @@ export async function listOrdersForUserUi(
       t.TOWN AS Town,
       SUM(od.AMOUNT) AS TotalQty,
       COUNT(DISTINCT od.ITEMID) AS DistinctItems,
-      STRING_AGG(CONVERT(varchar(20), od.ITEMID), ',') AS ItemIds
+      STRING_AGG(CONVERT(varchar(20), od.ITEMID), ',') AS ItemIds,
+      (
+        SELECT TOP (1) h.NOTE
+        FROM dbo.ORDER_STATUS_HISTORY h
+        WHERE h.ORDER_ID = o.ID
+          AND h.NEW_STATUS = ${ORDER_STATUS.REJECTED}
+        ORDER BY h.CHANGED_AT DESC, h.ID DESC
+      ) AS RejectHistoryNote
     FROM dbo.ORDERS o
     LEFT JOIN dbo.ORDERDETAILS od ON od.ORDERID = o.ID
     LEFT JOIN dbo.ADDRESS a ON a.ID = o.ADDRESSID
@@ -118,13 +147,24 @@ export async function listOrdersForUserUi(
         OR (@status = 'completed' AND o.STATUS_ IN (5))
       )
     GROUP BY
-      o.ID, o.DATE_, o.TOTALPRICE, o.STATUS_, o.CARGO_COMPANY, o.TRACKING_NO, a.ADDRESSTEXT, ci.CITY, t.TOWN
+      o.ID,
+      o.DATE_,
+      o.TOTALPRICE,
+      o.STATUS_,
+      o.CARGO_COMPANY,
+      o.TRACKING_NO,
+      a.ADDRESSTEXT,
+      ci.CITY,
+      t.TOWN
     ORDER BY o.DATE_ DESC, o.ID DESC;
     `,
     { userId: Number(userId), q, status }
   );
 
-  return rows.map((r) => ({
+  return rows.map((r) => {
+    const rejectRaw = (r as OrderListItem & { RejectHistoryNote?: string | null }).RejectHistoryNote;
+    const parsed = parseRejectFromHistoryNote(rejectRaw ?? null);
+    return {
     ...r,
     ID: Number(r.ID),
     TotalPrice: Number(r.TotalPrice ?? 0),
@@ -133,8 +173,8 @@ export async function listOrdersForUserUi(
     DistinctItems: Number(r.DistinctItems ?? 0),
     Date: r.Date ? new Date(r.Date) : null,
     ItemIds: r.ItemIds ?? null,
-    RejectReasonCode: null,
-    RejectReasonNote: null,
+    RejectReasonCode: parsed.RejectReasonCode,
+    RejectReasonNote: parsed.RejectReasonNote ?? (rejectRaw?.trim() || null),
     CargoCompany: r.CargoCompany || null,
     TrackingNo: r.TrackingNo || null,
     ApprovedAt: null,
@@ -142,7 +182,8 @@ export async function listOrdersForUserUi(
     ShippedAt: null,
     DeliveredAt: null,
     CustomerConfirmedAt: null,
-  }));
+  };
+  });
 }
 
 export type OrderDetailLine = {
@@ -178,7 +219,14 @@ export async function getOrderForUser(userId: number, orderId: number) {
             OR h.NOTE LIKE '%Tracking no:%'
           )
         ORDER BY h.CHANGED_AT DESC, h.ID DESC
-      ) AS ShippingInfoNote
+      ) AS ShippingInfoNote,
+      (
+        SELECT TOP (1) h.NOTE
+        FROM dbo.ORDER_STATUS_HISTORY h
+        WHERE h.ORDER_ID = o.ID
+          AND h.NEW_STATUS = ${ORDER_STATUS.REJECTED}
+        ORDER BY h.CHANGED_AT DESC, h.ID DESC
+      ) AS RejectHistoryNote
     FROM dbo.ORDERS o
     LEFT JOIN dbo.ADDRESS a ON a.ID = o.ADDRESSID
     LEFT JOIN dbo.CITIES ci ON ci.ID = a.CITYID
@@ -189,14 +237,16 @@ export async function getOrderForUser(userId: number, orderId: number) {
   );
   const order = rows[0];
   if (!order) return null;
+  const rejectRaw = (order as OrderListItem & { RejectHistoryNote?: string | null }).RejectHistoryNote;
+  const parsed = parseRejectFromHistoryNote(rejectRaw ?? null);
   return {
     ...order,
     ID: Number(order.ID),
     TotalPrice: Number(order.TotalPrice ?? 0),
     Status: Number(order.Status ?? 0),
     Date: order.Date ? new Date(order.Date) : null,
-    RejectReasonCode: null,
-    RejectReasonNote: null,
+    RejectReasonCode: parsed.RejectReasonCode,
+    RejectReasonNote: parsed.RejectReasonNote ?? (rejectRaw?.trim() || null),
     CargoCompany:
       order.CargoCompany ||
       (typeof (order as OrderListItem & { ShippingInfoNote?: string | null }).ShippingInfoNote === "string"

@@ -12,9 +12,8 @@ const LABELS: Record<string, string> = {
   credits: "Credits",
   raffle: "Lucky Draw",
   coupons: "Discount Coupons",
-  "user-info": "User Info",
+  "user-info": "Profile",
   cards: "Saved Cards",
-  notifications: "Notification Preferences",
   password: "Change Password",
   plus: "TradeHub Plus",
   elite: "TradeHub Elite",
@@ -31,8 +30,8 @@ export default async function AccountSectionPage({ params }: { params: Promise<{
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold">{title}</h1>
-        <Link className="text-sm text-slate-400 hover:text-slate-200" href="/account">
-          ← Back to account
+        <Link className="text-sm text-slate-400 transition hover:text-sky-300" href="/account">
+          ← Account
         </Link>
       </div>
 

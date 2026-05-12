@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/auth_controller.dart';
 
 /// Register screen for creating first local account.
@@ -36,21 +37,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }) {
       return InputDecoration(
         labelText: label,
-        prefixIcon: customPrefix ?? (icon == null ? null : Icon(icon)),
+        prefixIcon: customPrefix ??
+            (icon == null ? null : Icon(icon, color: TradeHubColors.textMuted)),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: TradeHubColors.surface2,
+        labelStyle: const TextStyle(color: TradeHubColors.textMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: TradeHubColors.accent, width: 1.5),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: TradeHubColors.bg,
       appBar: AppBar(title: const Text('Create Account')),
       body: SafeArea(
         child: Center(
@@ -58,11 +66,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: const EdgeInsets.all(20),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: DefaultTextStyle(
+                style: const TextStyle(color: TradeHubColors.textPrimary),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
@@ -309,7 +319,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               },
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          backgroundColor: const Color(0xFF4F46E5),
+                          backgroundColor: TradeHubColors.primaryDeep,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -319,6 +329,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
             ),

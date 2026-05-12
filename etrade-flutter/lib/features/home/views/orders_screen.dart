@@ -1,47 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../core/order_status.dart';
+import '../../../theme/tradehub_theme.dart';
 import '../controllers/home_controller.dart';
 import '../models/account_models.dart';
-import 'orders_page.dart';
+import 'order_detail_page.dart';
+
 class OrdersScreen extends StatelessWidget {
   const OrdersScreen({required this.controller, super.key});
 
   final HomeController controller;
 
-  Color _statusColor(String? statusText, int? status) {
-    final s = status ?? 0;
-    if (s == 5) return const Color(0xFF34C759);
-    if (s == 6) return const Color(0xFFFF3B30);
-    final t = (statusText ?? '').toLowerCase();
-    if (t.contains('complet') || t.contains('done')) return const Color(0xFF34C759);
-    if (t.contains('reject') || t.contains('cancel')) return const Color(0xFFFF3B30);
-    return const Color(0xFF007AFF);
+  Color _statusColor(int? status) {
+    final s = status ?? OrderStatus.placed;
+    if (s == OrderStatus.completed) return TradeHubColors.success;
+    if (s == OrderStatus.rejected) return TradeHubColors.danger;
+    if (s == OrderStatus.delivered) return TradeHubColors.accent;
+    return TradeHubColors.primary;
   }
 
-  String _statusLabel(String? statusText, int? status) {
-    if (statusText != null && statusText.isNotEmpty) return statusText;
-    const labels = {
-      1: 'Placed',
-      2: 'Preparing',
-      3: 'Shipped',
-      4: 'Delivered',
-      5: 'Completed',
-      6: 'Rejected',
-    };
-    return labels[status] ?? 'Processing';
+  String _statusLabel(UserOrderItem order) {
+    return OrderStatus.displayLabel(status: order.status, statusText: order.statusText);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: TradeHubColors.bg,
       body: SafeArea(
         child: Column(
           children: [
             // ── App bar ──────────────────────────────────────────────
             Container(
-              color: Colors.white,
+              color: TradeHubColors.bg,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
@@ -51,10 +43,11 @@ class OrdersScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF2F2F7),
+                        color: TradeHubColors.surface2,
                         borderRadius: BorderRadius.circular(17),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new, size: 16),
+                      child: const Icon(Icons.arrow_back_ios_new, size: 16, color: TradeHubColors.textPrimary),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -64,6 +57,7 @@ class OrdersScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
+                        color: TradeHubColors.textPrimary,
                       ),
                     ),
                   ),
@@ -76,13 +70,14 @@ class OrdersScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF2F2F7),
+                        color: TradeHubColors.surface2,
                         borderRadius: BorderRadius.circular(17),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                       ),
                       child: const Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black54,
+                        color: TradeHubColors.textMuted,
                       ),
                     ),
                   ),
@@ -94,7 +89,7 @@ class OrdersScreen extends StatelessWidget {
             Expanded(
               child: Obx(() {
                 if (controller.isOrdersLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: TradeHubColors.primary));
                 }
 
                 if (controller.ordersErrorMessage.value.isNotEmpty) {
@@ -102,16 +97,16 @@ class OrdersScreen extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_outline,
                           size: 48,
-                          color: Colors.black26,
+                          color: TradeHubColors.textMuted.withValues(alpha: 0.8),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           controller.ordersErrorMessage.value,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.black54),
+                          style: const TextStyle(color: TradeHubColors.textMuted),
                         ),
                         const SizedBox(height: 12),
                         FilledButton(
@@ -131,7 +126,7 @@ class OrdersScreen extends StatelessWidget {
                         Icon(
                           Icons.receipt_long_outlined,
                           size: 64,
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: TradeHubColors.textMuted.withValues(alpha: 0.35),
                         ),
                         const SizedBox(height: 14),
                         const Text(
@@ -139,13 +134,13 @@ class OrdersScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black45,
+                            color: TradeHubColors.textMuted,
                           ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
                           'Your orders will appear here.',
-                          style: TextStyle(fontSize: 13, color: Colors.black38),
+                          style: TextStyle(fontSize: 13, color: TradeHubColors.textMuted),
                         ),
                       ],
                     ),
@@ -160,8 +155,8 @@ class OrdersScreen extends StatelessWidget {
                     return _OrderTile(
                       order: order,
                       controller: controller,
-                      statusColor: _statusColor(order.statusText, order.status),
-                      statusLabel: _statusLabel(order.statusText, order.status),
+                      statusColor: _statusColor(order.status),
+                      statusLabel: _statusLabel(order),
                     );
                   },
                 );
@@ -198,8 +193,9 @@ class _OrderTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: TradeHubColors.surface2,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Row(
           children: [
@@ -229,7 +225,7 @@ class _OrderTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1C1C1E),
+                      color: TradeHubColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -237,7 +233,7 @@ class _OrderTile extends StatelessWidget {
                     order.dateLabel,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.black45,
+                      color: TradeHubColors.textMuted,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -273,13 +269,13 @@ class _OrderTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF1C1C1E),
+                    color: TradeHubColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 const Icon(
                   Icons.chevron_right,
-                  color: Colors.black26,
+                  color: TradeHubColors.textMuted,
                   size: 20,
                 ),
               ],

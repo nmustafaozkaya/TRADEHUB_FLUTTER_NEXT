@@ -13,6 +13,7 @@ import { QtyPickerAddToCart } from "@/components/QtyPickerAddToCart";
 import { ItemProtectionPlans } from "@/components/ItemProtectionPlans";
 import { ItemTile } from "@/components/ItemTile";
 import { listBestSellers } from "@/lib/repos/dashboard";
+import { displayCategoryFilter } from "@/lib/shopCategories";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,11 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
     imageUrl: item.IMAGE_URL,
   });
 
-  const categories = [item.CATEGORY1, item.CATEGORY2, item.CATEGORY3, item.CATEGORY4].filter(Boolean).join(" / ");
+  const categories = [item.CATEGORY1, item.CATEGORY2, item.CATEGORY3, item.CATEGORY4]
+    .filter(Boolean)
+    .map((c) => displayCategoryFilter(String(c)))
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join(" / ");
 
   const [boughtTogetherRaw, similarRaw, bestSellersRaw, stats] = await Promise.all([
     listBoughtTogether(item.ID, 10),

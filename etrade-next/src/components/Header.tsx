@@ -19,7 +19,7 @@ export async function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 h-14 overflow-visible border-b border-white/10 bg-slate-950/70 backdrop-blur sm:h-16">
+      <header className="sticky top-0 z-40 h-14 overflow-visible border-b border-indigo-500/10 bg-[#0b1020]/80 backdrop-blur-md sm:h-16">
         <div className="mx-auto flex h-full w-full max-w-6xl items-center gap-3 px-4">
           <Link href="/items" className="relative block h-full w-[220px] shrink-0 sm:w-[260px]">
             <Image

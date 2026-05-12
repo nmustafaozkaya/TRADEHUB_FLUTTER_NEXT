@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-slate-950 text-slate-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full bg-[#0b1020] text-[color:var(--foreground)]`}
       >
         <PageTransition />
         <HeaderGate>

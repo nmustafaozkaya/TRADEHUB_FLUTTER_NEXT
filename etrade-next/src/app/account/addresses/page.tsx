@@ -14,8 +14,8 @@ export default async function AddressesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold">My Addresses</h1>
-        <Link className="text-sm text-slate-400 hover:text-slate-200" href="/account">
-          ← Back to account
+        <Link className="text-sm text-slate-400 transition hover:text-sky-300" href="/account">
+          ← Account
         </Link>
       </div>
 

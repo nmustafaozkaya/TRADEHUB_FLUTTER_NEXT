@@ -183,8 +183,6 @@ export default function AdminDashboardPage() {
               { key: "orders", label: "Orders" },
               { key: "customers", label: "Customers" },
               { key: "products", label: "Products" },
-              { key: "reports", label: "Reports" },
-              { key: "settings", label: "Settings" },
             ].map((item) => (
               <button
                 key={item.key}

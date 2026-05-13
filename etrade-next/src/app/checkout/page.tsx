@@ -6,7 +6,7 @@ import { getUser } from "@/lib/auth";
 import { listAddressesForUser } from "@/lib/repos/addresses";
 import { listSavedCardsForUser } from "@/lib/repos/cards";
 import { formatTry } from "@/lib/format";
-import { shippingFee } from "@/lib/shipping";
+import { shippingFee, SHIPPING_FREE_THRESHOLD } from "@/lib/shipping";
 import { CheckoutForm } from "./ui/CheckoutForm";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
@@ -24,7 +24,7 @@ export default async function CheckoutPage() {
     0
   );
   const subtotal = itemsSubtotal + protectionTotal;
-  const ship = shippingFee(subtotal);
+  const ship = shippingFee(itemsSubtotal);
   const total = subtotal + ship;
 
   if (!cart.lines.length) {
@@ -119,7 +119,10 @@ export default async function CheckoutPage() {
                   <span className="text-slate-200">
                     {ship === 0 ? (
                       <>
-                        {formatTry(0)} <span className="text-xs text-emerald-200/90">(free over {formatTry(300)})</span>
+                        {formatTry(0)}{" "}
+                        <span className="text-xs text-emerald-200/90">
+                          (free over {formatTry(SHIPPING_FREE_THRESHOLD)})
+                        </span>
                       </>
                     ) : (
                       formatTry(ship)

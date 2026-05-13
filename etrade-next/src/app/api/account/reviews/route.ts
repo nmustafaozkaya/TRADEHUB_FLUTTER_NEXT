@@ -1,0 +1,40 @@
+export const runtime = "nodejs";
+
+import { NextResponse } from "next/server";
+import { getUser } from "@/lib/auth";
+import { findUserByLogin } from "@/lib/repos/users";
+import { listReviewsForUser } from "@/lib/repos/reviews";
+
+async function resolveUserId(req: Request): Promise<number | null> {
+  const sessionUser = await getUser();
+  if (sessionUser?.id) return Number(sessionUser.id);
+  const fromHeader = Number(req.headers.get("x-user-id") || 0);
+  if (Number.isFinite(fromHeader) && fromHeader > 0) return fromHeader;
+  const login = (req.headers.get("x-username") || "").trim();
+  if (!login) return null;
+  const user = await findUserByLogin(login);
+  return user?.ID ? Number(user.ID) : null;
+}
+
+export async function GET(req: Request) {
+  const userId = await resolveUserId(req);
+  if (!userId) {
+    return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
+  }
+
+  const reviews = await listReviewsForUser(userId);
+  return NextResponse.json({
+    ok: true,
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      orderId: r.orderId,
+      itemId: r.itemId,
+      itemName: r.itemName,
+      brand: r.brand,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt,
+    })),
+  });
+}
+

@@ -14,6 +14,9 @@ import { ItemProtectionPlans } from "@/components/ItemProtectionPlans";
 import { ItemTile } from "@/components/ItemTile";
 import { listBestSellers } from "@/lib/repos/dashboard";
 import { displayCategoryFilter } from "@/lib/shopCategories";
+import { getItemReviewSummary, listItemReviews, listReviewSummariesByItemIds } from "@/lib/repos/reviews";
+import { ItemReviewForm } from "@/components/ItemReviewForm";
+import { ItemReviewsPanel } from "@/components/ItemReviewsPanel";
 
 export const runtime = "nodejs";
 
@@ -27,6 +30,19 @@ function dedupeById<T extends { ID: number }>(items: T[]) {
     out.push(it);
   }
   return out;
+}
+
+function RatingStars({ value }: { value: number }) {
+  const normalized = Math.max(0, Math.min(5, Number.isFinite(value) ? value : 0));
+  const pct = `${(normalized / 5) * 100}%`;
+  return (
+    <div className="relative inline-flex leading-none">
+      <div className="text-lg text-slate-600">★★★★★</div>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ width: pct }}>
+        <div className="text-lg text-amber-300">★★★★★</div>
+      </div>
+    </div>
+  );
 }
 
 export default async function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,7 +68,7 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
     .filter((v, i, a) => a.indexOf(v) === i)
     .join(" / ");
 
-  const [boughtTogetherRaw, similarRaw, bestSellersRaw, stats] = await Promise.all([
+  const [boughtTogetherRaw, similarRaw, bestSellersRaw, stats, reviewSummary, reviewRows] = await Promise.all([
     listBoughtTogether(item.ID, 10),
     listSimilarItems({
       excludeId: item.ID,
@@ -62,6 +78,8 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
     }),
     listBestSellers(14),
     getItemSalesStats(item.ID),
+    getItemReviewSummary(item.ID),
+    listItemReviews(item.ID, 50),
   ]);
 
   const boughtTogether = dedupeById(boughtTogetherRaw).filter((x) => x.ID !== item.ID).slice(0, 10);
@@ -72,6 +90,11 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
 
   const used = new Set<number>([item.ID, ...boughtTogether.map((x) => x.ID), ...similar.map((x) => x.ID)]);
   const recommended = bestSellers.filter((x) => !used.has(x.ID)).slice(0, 10);
+  const tileReviewMap = await listReviewSummariesByItemIds([
+    ...boughtTogether.map((x) => Number(x.ID)),
+    ...similar.map((x) => Number(x.ID)),
+    ...recommended.map((x) => Number(x.ID)),
+  ]);
 
   const protectionPlan = buildExtendedWarrantyPlan({
     unitPrice,
@@ -131,6 +154,14 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
                     </div>
                   </div>
 
+                  <div className="mt-3 flex items-center gap-2">
+                    <RatingStars value={reviewSummary.averageRating} />
+                    <span className="text-sm font-semibold text-slate-200">
+                      {reviewSummary.averageRating > 0 ? reviewSummary.averageRating.toFixed(1) : "0.0"}
+                    </span>
+                    <span className="text-xs text-slate-400">({reviewSummary.totalReviews} reviews)</span>
+                  </div>
+
                   <div className="mt-4 flex items-center justify-between gap-3">
                     <div className="text-2xl font-extrabold">{formatTry(unitPrice)}</div>
                     <FavoriteButton itemId={item.ID} active={favSet.has(item.ID)} />
@@ -169,6 +200,18 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
             </CardBody>
           </Card>
 
+          <Card>
+            <CardBody>
+              <h2 className="text-lg font-extrabold">Reviews</h2>
+              <ItemReviewsPanel
+                averageRating={reviewSummary.averageRating}
+                totalReviews={reviewSummary.totalReviews}
+                reviews={reviewRows}
+              />
+              <ItemReviewForm itemId={item.ID} />
+            </CardBody>
+          </Card>
+
           {boughtTogether.length ? (
             <section className="space-y-2">
               <div className="flex items-end justify-between gap-3">
@@ -181,7 +224,13 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
               <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {boughtTogether.map((it) => (
                   <div key={it.ID} className="w-[240px] shrink-0">
-                    <ItemTile item={it} favoriteActive={favSet.has(it.ID)} compact />
+                    <ItemTile
+                      item={it}
+                      favoriteActive={favSet.has(it.ID)}
+                      compact
+                      averageRating={tileReviewMap[Number(it.ID)]?.averageRating ?? 0}
+                      totalReviews={tileReviewMap[Number(it.ID)]?.totalReviews ?? 0}
+                    />
                   </div>
                 ))}
               </div>
@@ -197,7 +246,13 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {similar.slice(0, 6).map((it) => (
-                  <ItemTile key={it.ID} item={it} favoriteActive={favSet.has(it.ID)} showMeta />
+                  <ItemTile
+                    key={it.ID}
+                    item={it}
+                    favoriteActive={favSet.has(it.ID)}
+                    averageRating={tileReviewMap[Number(it.ID)]?.averageRating ?? 0}
+                    totalReviews={tileReviewMap[Number(it.ID)]?.totalReviews ?? 0}
+                  />
                 ))}
               </div>
             </section>
@@ -213,7 +268,13 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
               <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {recommended.map((it) => (
                   <div key={it.ID} className="w-[240px] shrink-0">
-                    <ItemTile item={it} favoriteActive={favSet.has(it.ID)} compact />
+                    <ItemTile
+                      item={it}
+                      favoriteActive={favSet.has(it.ID)}
+                      compact
+                      averageRating={tileReviewMap[Number(it.ID)]?.averageRating ?? 0}
+                      totalReviews={tileReviewMap[Number(it.ID)]?.totalReviews ?? 0}
+                    />
                   </div>
                 ))}
               </div>
@@ -221,30 +282,28 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
           ) : null}
         </div>
 
-        <aside className="space-y-4 lg:self-start">
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <Card>
-              <CardBody>
-                <div className="text-sm text-slate-400">Order summary</div>
-                <div className="mt-1 text-2xl font-extrabold text-slate-100">{formatTry(unitPrice)}</div>
-                <div className="mt-3 space-y-1 text-sm text-slate-300">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-400">Item</span>
-                    <span className="truncate text-right">{name}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-400">Brand</span>
-                    <span className="truncate text-right">{item.BRAND || "-"}</span>
-                  </div>
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <Card>
+            <CardBody>
+              <div className="text-sm text-slate-400">Order summary</div>
+              <div className="mt-1 text-2xl font-extrabold text-slate-100">{formatTry(unitPrice)}</div>
+              <div className="mt-3 space-y-1 text-sm text-slate-300">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-400">Item</span>
+                  <span className="truncate text-right">{name}</span>
                 </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-400">Brand</span>
+                  <span className="truncate text-right">{item.BRAND || "-"}</span>
+                </div>
+              </div>
 
-                <div className="mt-4 flex items-center justify-between gap-2">
-                  <FavoriteButton itemId={item.ID} active={favSet.has(item.ID)} />
-                  <QtyPickerAddToCart itemId={item.ID} name={name} unitPrice={unitPrice} max={20} />
-                </div>
-              </CardBody>
-            </Card>
-          </div>
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <FavoriteButton itemId={item.ID} active={favSet.has(item.ID)} />
+                <QtyPickerAddToCart itemId={item.ID} name={name} unitPrice={unitPrice} max={20} />
+              </div>
+            </CardBody>
+          </Card>
 
           <Card>
             <CardBody>

@@ -5,6 +5,8 @@ import '../../../core/order_status.dart';
 import '../../../theme/tradehub_theme.dart';
 import '../controllers/home_controller.dart';
 import '../models/account_models.dart';
+import '../models/product_item.dart';
+import 'productdetail_page.dart';
 import 'home_shared_widgets.dart';
 
 /// Full-screen order detail: timeline, line items, addresses, payment summary.
@@ -287,7 +289,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              ...detail.items.map(_buildItemCard),
+              ...detail.items.map((item) {
+                final canReview = detail.status == OrderStatus.delivered ||
+                    detail.status == OrderStatus.completed;
+                return _buildItemCard(
+                  item,
+                  canReview: canReview,
+                  alreadyReviewed: item.hasReviewed,
+                );
+              }),
             ],
           ),
         ),
@@ -443,7 +453,40 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   // ─── Item card row ────────────────────────────────────────────────────────
 
-  Widget _buildItemCard(OrderLineItem item) {
+  void _openReviewPage(OrderLineItem item) {
+    ProductItem? selected;
+    for (final p in widget.controller.products) {
+      if (p.id == item.itemId) {
+        selected = p;
+        break;
+      }
+    }
+    selected ??= ProductItem(
+      id: item.itemId,
+      name: item.itemName,
+      price: item.unitPrice,
+      oldPrice: item.unitPrice,
+      discountLabel: '',
+      rating: 0,
+      totalReviews: 0,
+      category: item.brand.isNotEmpty ? item.brand : 'General',
+      imageUrl: item.imageUrl ?? '',
+    );
+    Get.to(
+      () => ProductDetailPage(
+        controller: widget.controller,
+        product: selected!,
+        allProducts: widget.controller.products.toList(),
+      ),
+      transition: Transition.rightToLeft,
+    );
+  }
+
+  Widget _buildItemCard(
+    OrderLineItem item, {
+    required bool canReview,
+    required bool alreadyReviewed,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -530,7 +573,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               SizedBox(
                 height: 40,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: (canReview && !alreadyReviewed)
+                      ? () => _openReviewPage(item)
+                      : null,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: TradeHubColors.surface,
@@ -540,11 +585,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'Review',
+                  child: Text(
+                    alreadyReviewed ? 'Reviewed' : 'Review',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -556,7 +601,18 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               SizedBox(
                 height: 40,
                 child: FilledButton(
-                  onPressed: () => widget.controller.addToCart(item.itemId),
+                  onPressed: () {
+                    widget.controller.addToCart(item.itemId);
+                    Get.snackbar(
+                      'Cart',
+                      'Item added to cart.',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: TradeHubColors.surface2,
+                      colorText: TradeHubColors.textPrimary,
+                      margin: const EdgeInsets.all(16),
+                      borderRadius: 12,
+                    );
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: TradeHubColors.accent,
                     foregroundColor: const Color(0xFF0B1020),

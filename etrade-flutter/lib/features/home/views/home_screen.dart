@@ -7,7 +7,9 @@ import '../models/product_item.dart';
 import 'address_page.dart';
 import 'cards_page.dart';
 import 'cart_page.dart';
+import 'change_password_page.dart';
 import 'favorites_page.dart';
+import 'my_reviews_page.dart';
 import 'orders_screen.dart';
 import 'productdetail_page.dart';
 import 'profile_page.dart';
@@ -130,9 +132,44 @@ class _HomeBody extends StatelessWidget {
         );
       }
 
-      return _ProductGrid(
-        controller: controller,
-        items: controller.filteredProducts,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (controller.selectedCategory.value == HomeController.bestsellerCategory) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Best Sellers',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.35,
+                      color: TradeHubColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Top items by purchase volume',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.25,
+                      color: TradeHubColors.textMuted.withValues(alpha: 0.92),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          Expanded(
+            child: _ProductGrid(
+              controller: controller,
+              items: controller.filteredProducts,
+            ),
+          ),
+        ],
       );
     });
   }
@@ -227,58 +264,46 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return TextField(
+      onChanged: controller.updateSearch,
+      style: const TextStyle(
+        color: TradeHubColors.textPrimary,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
       ),
-      child: TextField(
-        onChanged: controller.updateSearch,
-        style: const TextStyle(
-          color: TradeHubColors.textPrimary,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
+      cursorColor: TradeHubColors.accent,
+      decoration: InputDecoration(
+        hintText: 'Search products…',
+        hintStyle: TextStyle(
+          color: TradeHubColors.textMuted.withValues(alpha: 0.85),
+          fontWeight: FontWeight.w400,
         ),
-        cursorColor: TradeHubColors.accent,
-        decoration: InputDecoration(
-          hintText: 'Search products…',
-          hintStyle: TextStyle(
-            color: TradeHubColors.textMuted.withValues(alpha: 0.85),
-            fontWeight: FontWeight.w400,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 4,
-            vertical: 14,
-          ),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            color: TradeHubColors.textMuted,
-            size: 24,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: TradeHubColors.accent,
-              width: 1.5,
-            ),
-          ),
-          filled: true,
-          fillColor: TradeHubColors.surface2,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 4,
+          vertical: 14,
         ),
+        prefixIcon: const Icon(
+          Icons.search_rounded,
+          color: TradeHubColors.textMuted,
+          size: 24,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: TradeHubColors.accent,
+            width: 1.5,
+          ),
+        ),
+        filled: true,
+        fillColor: TradeHubColors.surface2,
       ),
     );
   }
@@ -392,17 +417,19 @@ class _ProductGrid extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.7,
+        childAspectRatio: 0.62,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final product = items[index];
+        final isBestSeller = controller.selectedCategory.value == HomeController.bestsellerCategory;
         return Obx(() {
           final isFavorite = controller.favoriteProductIds.contains(product.id);
           return _ProductCard(
             product: product,
+            isBestSeller: isBestSeller,
             isFavorite: isFavorite,
             controller: controller,
           );
@@ -415,16 +442,21 @@ class _ProductGrid extends StatelessWidget {
 class _ProductCard extends StatelessWidget {
   const _ProductCard({
     required this.product,
+    required this.isBestSeller,
     required this.isFavorite,
     required this.controller,
   });
 
   final ProductItem product;
+  final bool isBestSeller;
   final bool isFavorite;
   final HomeController controller;
 
   @override
   Widget build(BuildContext context) {
+    final subtitle = product.category.isNotEmpty
+        ? '${product.category} • ${isBestSeller ? 'fast delivery' : 'Fresh and fast delivery'}'
+        : (isBestSeller ? 'fast delivery' : 'Fresh quality • fast delivery');
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -440,164 +472,179 @@ class _ProductCard extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                TradeHubColors.surface2,
-                TradeHubColors.surface.withValues(alpha: 0.92),
-              ],
-            ),
+            color: TradeHubColors.surface2,
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             boxShadow: [
               BoxShadow(
-                color: TradeHubColors.primary.withValues(alpha: 0.06),
-                blurRadius: 20,
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 18,
                 offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: TradeHubColors.bg.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Center(
-                      child: Image.network(
-                        product.imageUrl,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.image_outlined,
-                          size: 40,
-                          color: TradeHubColors.textMuted.withValues(
-                            alpha: 0.6,
+                Container(
+                  height: 116,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Image.network(
+                            product.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              color: Colors.grey.shade200,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.image_outlined,
+                                size: 36,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        if (isBestSeller)
+                          Positioned(
+                            left: 8,
+                            top: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.65),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Bestseller',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: GestureDetector(
+                            onTap: () => controller.toggleFavorite(product.id),
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Icon(
+                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                size: 16,
+                                color: isFavorite ? Colors.redAccent : const Color(0xFF4B5563),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
                   product.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     height: 1.25,
                     color: TradeHubColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'TRY',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.4,
-                              color: TradeHubColors.textMuted.withValues(
-                                alpha: 0.9,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            product.price.toStringAsFixed(2),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.3,
-                              color: TradeHubColors.accent,
-                            ),
-                          ),
-                        ],
+                    const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 2),
+                    Text(
+                      product.rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: TradeHubColors.textPrimary,
                       ),
                     ),
-                    _CardIconButton(
-                      icon: isFavorite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      iconColor: isFavorite
-                          ? TradeHubColors.danger
-                          : TradeHubColors.textMuted,
-                      onPressed: () => controller.toggleFavorite(product.id),
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${product.totalReviews})',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: TradeHubColors.textMuted,
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    _CardIconButton(
-                      icon: Icons.add_shopping_cart_rounded,
-                      iconColor: TradeHubColors.textPrimary,
-                      highlight: true,
-                      onPressed: () => controller.addToCart(product.id),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: TradeHubColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'TRY ${product.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: TradeHubColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 34,
+                      child: ElevatedButton.icon(
+                        onPressed: () => controller.addToCart(product.id),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: const Color(0xFF2E7D32),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.shopping_bag_outlined, size: 14),
+                        label: const Text(
+                          'Order',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CardIconButton extends StatelessWidget {
-  const _CardIconButton({
-    required this.icon,
-    required this.onPressed,
-    this.iconColor = TradeHubColors.textMuted,
-    this.highlight = false,
-  });
-
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color iconColor;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = highlight
-        ? TradeHubColors.primary.withValues(alpha: 0.22)
-        : Colors.white.withValues(alpha: 0.06);
-    final border = highlight
-        ? TradeHubColors.primary.withValues(alpha: 0.35)
-        : Colors.white.withValues(alpha: 0.08);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        customBorder: const CircleBorder(),
-        child: Ink(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: bg,
-            border: Border.all(color: border),
-          ),
-          child: Icon(icon, size: 19, color: iconColor),
         ),
       ),
     );
@@ -762,6 +809,26 @@ class _AccountBody extends StatelessWidget {
                   subtitle: 'Payment cards on your account',
                   onTap: () => Get.to(
                     () => CardsPage(controller: controller),
+                    transition: Transition.rightToLeft,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _AccountMenuTile(
+                  icon: Icons.reviews_outlined,
+                  title: 'My Reviews',
+                  subtitle: 'Your product ratings and comments',
+                  onTap: () => Get.to(
+                    () => MyReviewsPage(controller: controller),
+                    transition: Transition.rightToLeft,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _AccountMenuTile(
+                  icon: Icons.lock_outline_rounded,
+                  title: 'Change password',
+                  subtitle: 'Update your sign-in password',
+                  onTap: () => Get.to(
+                    () => ChangePasswordPage(controller: controller),
                     transition: Transition.rightToLeft,
                   ),
                 ),

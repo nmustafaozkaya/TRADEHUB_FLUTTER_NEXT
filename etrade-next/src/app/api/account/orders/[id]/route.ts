@@ -60,9 +60,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       itemId: Number(line.ItemId),
       itemName: line.ItemName || 'Item',
       brand: line.Brand || '',
+      imageUrl: line.ImageUrl || null,
       qty: Number(line.Qty ?? 0),
       unitPrice: Number(line.UnitPrice ?? 0),
       lineTotal: Number(line.LineTotal ?? 0),
+      hasReviewed: Number(line.HasReviewed ?? 0) > 0,
     })),
   });
 }

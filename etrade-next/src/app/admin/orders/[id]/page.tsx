@@ -164,8 +164,8 @@ export default function AdminOrderDetailPage() {
     return (
       <div className="space-y-3 p-6">
         <p className="text-sm text-rose-300">{error || "Order not found."}</p>
-        <Link href="/admin/dashboard" className="text-sm text-cyan-300 hover:underline">
-          Back to dashboard
+        <Link href="/admin/orders" className="text-sm text-cyan-300 hover:underline">
+          Back to orders
         </Link>
       </div>
     );
@@ -175,7 +175,7 @@ export default function AdminOrderDetailPage() {
     <main className="space-y-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Order Details</h1>
-        <Link href="/admin/dashboard" className="text-sm text-slate-400 hover:text-slate-200">
+        <Link href="/admin/orders" className="text-sm text-slate-400 hover:text-slate-200">
           ← All Orders
         </Link>
       </div>
@@ -217,6 +217,7 @@ export default function AdminOrderDetailPage() {
           <div className="flex w-full items-start">
             {ORDER_TIMELINE.map((step, idx) => {
               const isDone = activeStepIndex >= 0 && idx < activeStepIndex;
+              const isCurrent = activeStepIndex >= 0 && idx === activeStepIndex;
               return (
                 <div key={step.status} className="flex flex-1 items-start">
                   <div className="flex w-full flex-col items-center text-center">
@@ -224,12 +225,14 @@ export default function AdminOrderDetailPage() {
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
                         isDone
                           ? "border-emerald-400/60 bg-emerald-500 text-slate-950"
-                          : "border-white/20 bg-slate-900 text-slate-400"
-                      }`}
+                          : isCurrent
+                            ? "border-emerald-300/70 bg-emerald-500 text-slate-950"
+                            : "border-white/20 bg-slate-900 text-slate-400"
+                      } ${isCurrent ? "ring-2 ring-emerald-300/40" : ""}`}
                     >
                       {idx + 1}
                     </div>
-                    <div className={`mt-2 text-[11px] ${isDone ? "text-emerald-200" : "text-slate-400"}`}>
+                    <div className={`mt-2 text-[11px] ${(isDone || isCurrent) ? "text-emerald-200" : "text-slate-400"}`}>
                       {step.label}
                     </div>
                   </div>

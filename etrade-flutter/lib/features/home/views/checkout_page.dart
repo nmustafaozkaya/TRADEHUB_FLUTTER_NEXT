@@ -101,7 +101,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       (sum, row) => sum + c.getCartProtection(row.product!.id),
     );
     const shippingThreshold = 300.0;
-    final shipping = subtotal >= shippingThreshold ? 0.0 : 30.0;
+    const shippingStandardFee = 100.0;
+    final shipping = subtotal >= shippingThreshold ? 0.0 : shippingStandardFee;
     const discount = 0.0;
     final total = subtotal + protection + shipping - discount;
 

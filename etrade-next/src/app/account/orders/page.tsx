@@ -212,7 +212,11 @@ export default async function OrdersPage({
                       )}
 
                       {o.Status === ORDER_STATUS.COMPLETED ? (
-                        <ButtonLink href="/account/reviews" variant="primary" className="ml-auto">
+                        <ButtonLink
+                          href={imgs.length ? `/items/${imgs[0]}` : `/account/orders/${o.ID}`}
+                          variant="primary"
+                          className="ml-auto"
+                        >
                           Review
                         </ButtonLink>
                       ) : null}

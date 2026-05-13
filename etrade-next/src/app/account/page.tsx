@@ -31,6 +31,12 @@ const accountLinks = [
     icon: "card",
   },
   {
+    href: "/account/reviews",
+    title: "My Reviews",
+    subtitle: "Your product ratings and comments",
+    icon: "reviews",
+  },
+  {
     href: "/account/password",
     title: "Change password",
     subtitle: "Security and sign-in",
@@ -68,6 +74,13 @@ function AccountIcon({ kind }: { kind: (typeof accountLinks)[number]["icon"] }) 
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={cls} aria-hidden>
           <rect x="2" y="5" width="20" height="14" rx="2" />
           <path d="M2 10h20" />
+        </svg>
+      );
+    case "reviews":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={cls} aria-hidden>
+          <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
+          <path d="M8 9h8M8 13h5" />
         </svg>
       );
     case "lock":

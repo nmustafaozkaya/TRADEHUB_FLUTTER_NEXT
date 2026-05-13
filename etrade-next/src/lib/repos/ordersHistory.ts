@@ -190,9 +190,11 @@ export type OrderDetailLine = {
   ItemId: number;
   ItemName: string | null;
   Brand: string | null;
+  ImageUrl?: string | null;
   Qty: number;
   UnitPrice: number;
   LineTotal: number;
+  HasReviewed?: number | boolean | null;
 };
 
 export async function getOrderForUser(userId: number, orderId: number) {
@@ -276,9 +278,20 @@ export async function listOrderLinesForUser(userId: number, orderId: number) {
       od.ITEMID AS ItemId,
       i.ITEMNAME AS ItemName,
       i.BRAND AS Brand,
+      i.IMAGE_URL AS ImageUrl,
       od.AMOUNT AS Qty,
       od.UNITPRICE AS UnitPrice,
-      od.LINETOTAL AS LineTotal
+      od.LINETOTAL AS LineTotal,
+      CASE
+        WHEN EXISTS (
+          SELECT 1
+          FROM dbo.REVIEWS r
+          WHERE r.USERID = o.USERID
+            AND r.ORDERID = o.ID
+            AND r.ITEMID = od.ITEMID
+            AND r.ISACTIVE = 1
+        ) THEN 1 ELSE 0
+      END AS HasReviewed
     FROM dbo.ORDERDETAILS od
     INNER JOIN dbo.ORDERS o ON o.ID = od.ORDERID
     LEFT JOIN dbo.ITEMS i ON i.ID = od.ITEMID
@@ -293,6 +306,7 @@ export async function listOrderLinesForUser(userId: number, orderId: number) {
     Qty: Number(r.Qty ?? 0),
     UnitPrice: Number(r.UnitPrice ?? 0),
     LineTotal: Number(r.LineTotal ?? 0),
+    HasReviewed: Number(r.HasReviewed ?? 0) > 0 ? 1 : 0,
   }));
 }
 

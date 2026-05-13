@@ -9,6 +9,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { formatTry } from "@/lib/format";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
+import { AddToCartButton } from "@/components/AddToCartButton";
 import { ORDER_STATUS, orderStatusLabel } from "@/lib/orderStatus";
 import { ConfirmDeliveryButton } from "@/components/ConfirmDeliveryButton";
 import { shippingFee } from "@/lib/shipping";
@@ -184,7 +185,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                               className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
                                 isDone
                                   ? "border-emerald-400/60 bg-emerald-500 text-slate-950"
-                                  : "border-white/20 bg-slate-900 text-slate-400"
+                                  : isCurrent
+                                    ? "border-emerald-300/70 bg-emerald-500 text-slate-950"
+                                    : "border-white/20 bg-slate-900 text-slate-400"
                               } ${isCurrent ? "ring-2 ring-emerald-300/40" : ""}`}
                             >
                               {isDone ? (
@@ -278,12 +281,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <ButtonLink href="/account/reviews" variant="primary" className="justify-center bg-orange-500 hover:bg-orange-500/90">
-                    Review item
-                  </ButtonLink>
-                  <ButtonLink href="/items" variant="soft" className="justify-center border-orange-400/50 text-orange-300">
+                  {(order.Status === ORDER_STATUS.DELIVERED || order.Status === ORDER_STATUS.COMPLETED) ? (
+                    <ButtonLink href={`/items/${Number(l.ItemId)}`} variant="primary" className="justify-center bg-orange-500 hover:bg-orange-500/90">
+                      Review item
+                    </ButtonLink>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-500"
+                    >
+                      Review item
+                    </button>
+                  )}
+                  <AddToCartButton
+                    itemId={Number(l.ItemId)}
+                    name={l.ItemName || `Item #${Number(l.ItemId)}`}
+                    unitPrice={Number(l.UnitPrice || 0)}
+                    qty={1}
+                    className="inline-flex items-center justify-center rounded-xl border border-orange-400/50 bg-transparent px-3 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-500/10 disabled:opacity-60"
+                  >
                     Buy again
-                  </ButtonLink>
+                  </AddToCartButton>
                 </div>
               </article>
             ))}

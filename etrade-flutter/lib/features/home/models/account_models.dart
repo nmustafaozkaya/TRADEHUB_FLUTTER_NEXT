@@ -79,6 +79,7 @@ class OrderLineItem {
     required this.qty,
     required this.unitPrice,
     required this.lineTotal,
+    this.hasReviewed = false,
     this.imageUrl,
   });
 
@@ -88,6 +89,7 @@ class OrderLineItem {
   final int qty;
   final double unitPrice;
   final double lineTotal;
+  final bool hasReviewed;
   final String? imageUrl;
 
   factory OrderLineItem.fromJson(Map<String, dynamic> json) {
@@ -98,6 +100,7 @@ class OrderLineItem {
       qty: (json['qty'] as num?)?.toInt() ?? 0,
       unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
       lineTotal: (json['lineTotal'] as num?)?.toDouble() ?? 0,
+      hasReviewed: json['hasReviewed'] == true,
       imageUrl: json['imageUrl']?.toString(),
     );
   }
@@ -226,4 +229,39 @@ class UserOrderItem {
   final String? cargoCompany;
   final String? trackingNo;
   final String? addressText;
+}
+
+class UserReviewItem {
+  UserReviewItem({
+    required this.id,
+    required this.orderId,
+    required this.itemId,
+    required this.itemName,
+    required this.brand,
+    required this.rating,
+    required this.comment,
+    required this.createdAt,
+  });
+
+  final int id;
+  final int orderId;
+  final int itemId;
+  final String itemName;
+  final String brand;
+  final int rating;
+  final String comment;
+  final String createdAt;
+
+  factory UserReviewItem.fromJson(Map<String, dynamic> json) {
+    return UserReviewItem(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      orderId: (json['orderId'] as num?)?.toInt() ?? 0,
+      itemId: (json['itemId'] as num?)?.toInt() ?? 0,
+      itemName: (json['itemName'] ?? 'Item').toString(),
+      brand: (json['brand'] ?? '').toString(),
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      comment: (json['comment'] ?? '').toString(),
+      createdAt: (json['createdAt'] ?? '').toString(),
+    );
+  }
 }

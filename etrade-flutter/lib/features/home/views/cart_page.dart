@@ -40,7 +40,8 @@ class CartPage extends StatelessWidget {
           (sum, item) => sum + controller.getCartProtection(item.product!.id),
         );
         const shippingThreshold = 300.0;
-        final shipping = total >= shippingThreshold ? 0.0 : 30.0;
+        const shippingStandardFee = 100.0;
+        final shipping = total >= shippingThreshold ? 0.0 : shippingStandardFee;
         const discount = 0.0;
         final grandTotal = total + protectionTotal + shipping - discount;
 

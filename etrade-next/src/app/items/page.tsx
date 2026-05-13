@@ -4,7 +4,6 @@ import Image from "next/image";
 import { listItems } from "@/lib/repos/items";
 import { formatTry, tryNumber } from "@/lib/format";
 import { AddToCartButton } from "@/components/AddToCartButton";
-import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 import { listAllCategory1Counts, listBestSellers } from "@/lib/repos/dashboard";
@@ -13,6 +12,7 @@ import {
   aggregateTopCategoriesToShop,
   displayCategoryFilter,
 } from "@/lib/shopCategories";
+import { listReviewSummariesByItemIds } from "@/lib/repos/reviews";
 import { getFavorites } from "@/lib/favorites";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { itemPrimaryImageSrc } from "@/lib/itemImage";
@@ -38,6 +38,10 @@ export default async function ItemsPage({
   const shopCounts = aggregateTopCategoriesToShop(rawCategoryCounts);
   const favSet = new Set(favs.ids);
   const lastPage = Math.max(1, Math.ceil(result.total / result.pageSize));
+  const reviewMap = await listReviewSummariesByItemIds([
+    ...result.items.map((x) => Number(x.ID)),
+    ...bestSellers.map((x) => Number(x.ID)),
+  ]);
 
   const qs = (p: number) =>
     new URLSearchParams({
@@ -137,6 +141,7 @@ export default async function ItemsPage({
                 {bestSellers.map((it) => {
                   const name = it.ITEMNAME || "(Unnamed)";
                   const unitPrice = tryNumber(it.UNITPRICE);
+                  const summary = reviewMap[Number(it.ID)] ?? { averageRating: 0, totalReviews: 0 };
                   const imgSrc = itemPrimaryImageSrc({
                     id: it.ID,
                     name,
@@ -146,27 +151,38 @@ export default async function ItemsPage({
                   return (
                     <div
                       key={it.ID}
-                      className="w-[260px] shrink-0 rounded-2xl border border-white/10 bg-slate-900/45 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400/25"
+                      className="w-[260px] shrink-0 rounded-3xl border border-white/10 bg-slate-900/45 p-3 shadow-[0_12px_26px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(15,23,42,0.45)]"
                     >
-                      <Link href={`/items/${it.ID}`} className="block overflow-hidden rounded-xl border border-white/10">
+                      <Link href={`/items/${it.ID}`} className="relative block overflow-hidden rounded-2xl bg-slate-800/60">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img alt={name} src={imgSrc} className="h-36 w-full object-cover" />
+                        <img alt={name} src={imgSrc} className="h-40 w-full object-cover" />
                       </Link>
                       <div className="mt-3">
                         <Link href={`/items/${it.ID}`} className="line-clamp-2 font-semibold text-slate-100 hover:underline">
                           {name}
                         </Link>
-                        <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
-                          <span>Sold: <b className="text-slate-200">{it.SoldQty}</b></span>
-                          <span className="font-semibold text-slate-200">{formatTry(unitPrice)}</span>
+                        <div className="mt-1 flex items-center gap-1 text-sm text-amber-500">
+                          <span>★</span>
+                          <span className="font-semibold text-slate-200">
+                            {summary.averageRating > 0 ? summary.averageRating.toFixed(1) : "0.0"}
+                          </span>
+                          <span className="text-xs text-slate-400">({summary.totalReviews})</span>
                         </div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="flex flex-wrap gap-2">
-                            {it.BRAND ? <Badge className="border-indigo-400/25 bg-indigo-500/15 text-indigo-100/95">{it.BRAND}</Badge> : null}
-                          </div>
+                        <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                          {displayCategoryFilter(it.CATEGORY1 || "General")} • fast delivery
+                        </p>
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <div className="text-xl font-extrabold text-slate-100">{formatTry(unitPrice)}</div>
                           <div className="flex items-center gap-2">
                             <FavoriteButton itemId={it.ID} active={favSet.has(it.ID)} />
-                            <AddToCartButton itemId={it.ID} name={name} unitPrice={unitPrice} />
+                            <AddToCartButton
+                              itemId={it.ID}
+                              name={name}
+                              unitPrice={unitPrice}
+                              className="rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"
+                            >
+                              Order
+                            </AddToCartButton>
                           </div>
                         </div>
                       </div>
@@ -213,9 +229,10 @@ export default async function ItemsPage({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {result.items.map((it) => {
+        {result.items.map((it, index) => {
           const name = it.ITEMNAME || "(Unnamed)";
           const unitPrice = tryNumber(it.UNITPRICE);
+          const summary = reviewMap[Number(it.ID)] ?? { averageRating: 0, totalReviews: 0 };
           const imgSrc = itemPrimaryImageSrc({
             id: it.ID,
             name,
@@ -226,41 +243,47 @@ export default async function ItemsPage({
           return (
             <div
               key={it.ID}
-              className="group rounded-2xl border border-white/10 bg-slate-900/45 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:border-indigo-400/25 hover:shadow-indigo-900/25"
+              className="group rounded-3xl border border-white/10 bg-slate-900/45 p-3 shadow-[0_12px_26px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(15,23,42,0.45)]"
             >
-              <Link href={`/items/${it.ID}`} className="block overflow-hidden rounded-xl border border-white/10">
+              <Link href={`/items/${it.ID}`} className="relative block overflow-hidden rounded-2xl bg-slate-800/60">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt={name}
                   src={imgSrc}
                   loading="lazy"
-                  className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                  className="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.04]"
                 />
               </Link>
 
-              <div className="mt-3 flex items-start justify-between gap-2">
-                <div className="min-w-0">
+              <div className="mt-3">
+                <div className="flex items-start justify-between gap-2">
                   <Link href={`/items/${it.ID}`} className="line-clamp-2 font-semibold text-slate-100 hover:underline">
                     {name}
                   </Link>
-                  <div className="mt-1 text-xs text-slate-400">
-                    <span>Code: {it.ITEMCODE || "-"}</span>
-                    <span className="mx-2 text-white/15">•</span>
-                    <span>Brand: {it.BRAND || "-"}</span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {it.BRAND ? <Badge className="border-indigo-400/25 bg-indigo-500/15 text-indigo-100/95">{it.BRAND}</Badge> : null}
-                    {it.CATEGORY1 ? <Badge>{displayCategoryFilter(it.CATEGORY1)}</Badge> : null}
-                  </div>
+                  <FavoriteButton itemId={it.ID} active={favSet.has(it.ID)} />
                 </div>
-                <FavoriteButton itemId={it.ID} active={favSet.has(it.ID)} />
+                <div className="mt-1 flex items-center gap-1 text-sm text-amber-500">
+                  <span>★</span>
+                  <span className="font-semibold text-slate-200">
+                    {summary.averageRating > 0 ? summary.averageRating.toFixed(1) : "0.0"}
+                  </span>
+                  <span className="text-xs text-slate-400">({summary.totalReviews})</span>
+                </div>
+                <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                  {displayCategoryFilter(it.CATEGORY1 || "General")} • Fresh and fast delivery
+                </p>
               </div>
 
-              <div className="mt-3 flex items-center justify-between">
-                <div className="bg-gradient-to-r from-indigo-200 to-sky-200 bg-clip-text text-lg font-extrabold text-transparent">
-                  {formatTry(unitPrice)}
-                </div>
-                <AddToCartButton itemId={it.ID} name={name} unitPrice={unitPrice} />
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="text-2xl font-extrabold text-slate-100">{formatTry(unitPrice)}</div>
+                <AddToCartButton
+                  itemId={it.ID}
+                  name={name}
+                  unitPrice={unitPrice}
+                  className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"
+                >
+                  Order Now
+                </AddToCartButton>
               </div>
             </div>
           );

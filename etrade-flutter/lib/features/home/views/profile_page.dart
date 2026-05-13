@@ -58,10 +58,12 @@ class _ProfilePageState extends State<ProfilePage> {
   String _normalizeGender(String raw) {
     final t = raw.trim().toLowerCase();
     if (t == 'male' || t == 'm' || t == 'erkek') return 'Male';
-    if (t == 'female' || t == 'f' || t == 'kadın' || t == 'kadin')
+    if (t == 'female' || t == 'f' || t == 'kadın' || t == 'kadin') {
       return 'Female';
-    if (t == 'other' || t == 'o' || t == 'diğer' || t == 'diger')
+    }
+    if (t == 'other' || t == 'o' || t == 'diğer' || t == 'diger') {
       return 'Other';
+    }
     if (_genders.contains(raw.trim())) return raw.trim();
     return 'Other';
   }

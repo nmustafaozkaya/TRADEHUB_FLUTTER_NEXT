@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -141,6 +142,33 @@ Future<UserOrderDetail?> fetchOrderDetail(
     }
   }
 
+  /// Creates review for item if user has successful purchase.
+  Future<bool> createItemReview({
+    required int itemId,
+    required int rating,
+    required String comment,
+    int? userId,
+    String? username,
+  }) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$_baseUrl/api/items/$itemId/reviews'),
+        headers: _headers(userId: userId, username: username),
+        body: jsonEncode({
+          'rating': rating,
+          'comment': comment,
+        }),
+      ).timeout(const Duration(seconds: 12));
+      if (response.statusCode < 200 || response.statusCode >= 300) return false;
+      final map = jsonDecode(response.body) as Map<String, dynamic>?;
+      return map != null && map['ok'] == true;
+    } on TimeoutException {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<UserAddress>> fetchAddresses({
     int? userId,
     String? username,
@@ -165,6 +193,58 @@ Future<UserOrderDetail?> fetchOrderDetail(
       return [];
     }
   }
+
+  Future<List<UserReviewItem>> fetchReviews({
+    int? userId,
+    String? username,
+  }) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$_baseUrl/api/account/reviews'),
+        headers: _headers(userId: userId, username: username, json: false),
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) return [];
+      final map = jsonDecode(response.body) as Map<String, dynamic>;
+      final list = (map['reviews'] as List<dynamic>? ?? <dynamic>[]);
+      return list
+          .map((raw) => UserReviewItem.fromJson(raw as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<String?> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+    int? userId,
+    String? username,
+  }) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$_baseUrl/api/account/password'),
+            headers: _headers(userId: userId, username: username),
+            body: jsonEncode({
+              'oldPassword': oldPassword,
+              'newPassword': newPassword,
+              'confirmPassword': confirmPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 12));
+      final map = jsonDecode(response.body) as Map<String, dynamic>?;
+      if (response.statusCode >= 200 && response.statusCode < 300 && map?['ok'] == true) {
+        return null;
+      }
+      return (map?['error'] ?? 'Could not update password.').toString();
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (_) {
+      return 'Could not update password.';
+    }
+  }
+
   Future<int?> createOrder({
   required int addressId,
   required String paymentMethod,

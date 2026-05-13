@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { getCart } from "@/lib/cart";
 import { formatTry } from "@/lib/format";
-import { shippingFee } from "@/lib/shipping";
+import { shippingFee, SHIPPING_FREE_THRESHOLD } from "@/lib/shipping";
 import { CartLineEditor } from "@/components/CartLineEditor";
 import { ClearCartButton } from "@/components/ClearCartButton";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -30,7 +30,7 @@ export default async function CartPage() {
     0
   );
   const subtotal = itemsSubtotal + protectionTotal;
-  const ship = shippingFee(subtotal);
+  const ship = shippingFee(itemsSubtotal);
   const total = subtotal + ship;
   const itemsCount = cart.lines.reduce((sum, l) => sum + Number(l.qty || 0), 0);
 
@@ -160,7 +160,10 @@ export default async function CartPage() {
                   <span className="text-slate-200">
                     {ship === 0 ? (
                       <>
-                        {formatTry(0)} <span className="text-xs text-emerald-200/90">(free over {formatTry(300)})</span>
+                        {formatTry(0)}{" "}
+                        <span className="text-xs text-emerald-200/90">
+                          (free over {formatTry(SHIPPING_FREE_THRESHOLD)})
+                        </span>
                       </>
                     ) : (
                       formatTry(ship)

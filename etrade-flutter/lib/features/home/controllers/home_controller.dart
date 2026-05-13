@@ -33,7 +33,8 @@ class HomeController extends GetxController {
     'Toys & Games',
   ];
 
-  final categories = <String>['All', ...shopCategoryTiles].obs;
+  static const bestsellerCategory = 'Bestseller';
+  final categories = <String>['All', bestsellerCategory, ...shopCategoryTiles].obs;
 
   final selectedCategory = 'All'.obs;
   final searchText = ''.obs;
@@ -48,8 +49,11 @@ class HomeController extends GetxController {
   final addresses = <UserAddress>[].obs;
   final savedCards = <SavedCardItem>[].obs;
   final orders = <UserOrderItem>[].obs;
+  final reviews = <UserReviewItem>[].obs;
   final isOrdersLoading = false.obs;
+  final isReviewsLoading = false.obs;
   final ordersErrorMessage = ''.obs;
+  final reviewsErrorMessage = ''.obs;
   final isSavingProfile = false.obs;
 
   @override
@@ -66,8 +70,9 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = '';
     try {
-      final cat =
-          selectedCategory.value.trim().toLowerCase() == 'all' ? null : selectedCategory.value;
+      final selected = selectedCategory.value.trim().toLowerCase();
+      final String? cat =
+          selected == 'all' ? null : selectedCategory.value;
       final fetchedProducts = await _repository.getProducts(category: cat);
       products.assignAll(fetchedProducts);
       await _loadFavorites();
@@ -81,10 +86,10 @@ class HomeController extends GetxController {
   /// Search only; category is applied server-side in [loadProducts].
   List<ProductItem> get filteredProducts {
     final normalizedSearch = searchText.value.trim().toLowerCase();
-    if (normalizedSearch.isEmpty) return products.toList();
-    return products
-        .where((product) => product.name.toLowerCase().contains(normalizedSearch))
-        .toList();
+    final base = products.toList();
+
+    if (normalizedSearch.isEmpty) return base;
+    return base.where((product) => product.name.toLowerCase().contains(normalizedSearch)).toList();
   }
 
   void changeCategory(String category) {
@@ -495,7 +500,52 @@ Future<int?> createOrder({
       username: _currentLogin(),
     );
   }
-  
+
+  Future<bool> createReviewForItem({
+    required int itemId,
+    required int rating,
+    required String comment,
+  }) async {
+    return _accountApiService.createItemReview(
+      itemId: itemId,
+      rating: rating,
+      comment: comment,
+      userId: _currentUserId(),
+      username: _currentLogin(),
+    );
+  }
+
+  Future<void> loadReviews() async {
+    isReviewsLoading.value = true;
+    reviewsErrorMessage.value = '';
+    try {
+      final list = await _accountApiService.fetchReviews(
+        userId: _currentUserId(),
+        username: _currentLogin(),
+      );
+      reviews.assignAll(list);
+    } catch (_) {
+      reviews.clear();
+      reviewsErrorMessage.value = 'Could not load reviews. Please try again.';
+    } finally {
+      isReviewsLoading.value = false;
+    }
+  }
+
+  Future<String?> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    return _accountApiService.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+      userId: _currentUserId(),
+      username: _currentLogin(),
+    );
+  }
+
 
   Future<void> _loadOrders() async {
     isOrdersLoading.value = true;

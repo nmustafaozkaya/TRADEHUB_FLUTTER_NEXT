@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ItemRow } from "@/lib/repos/items";
 import { formatTry, tryNumber } from "@/lib/format";
 import { itemPrimaryImageSrc } from "@/lib/itemImage";
+import { displayCategoryFilter } from "@/lib/shopCategories";
 import { AddToCartButton } from "./AddToCartButton";
 import { FavoriteButton } from "./FavoriteButton";
 
@@ -11,6 +12,8 @@ export function ItemTile(props: {
   favoriteActive: boolean;
   showMeta?: boolean;
   compact?: boolean;
+  averageRating?: number;
+  totalReviews?: number;
 }) {
   const it = props.item;
   const name = it.ITEMNAME || "(Unnamed)";
@@ -23,11 +26,13 @@ export function ItemTile(props: {
   });
 
   const compact = Boolean(props.compact);
+  const avg = Number(props.averageRating ?? 0);
+  const totalReviews = Number(props.totalReviews ?? 0);
 
   return (
     <div
       className={[
-        "group rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-white/20",
+        "group rounded-3xl border border-white/10 bg-slate-900/45 shadow-[0_12px_26px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(15,23,42,0.45)]",
         compact ? "p-3" : "p-4",
       ].join(" ")}
     >
@@ -57,11 +62,24 @@ export function ItemTile(props: {
           </div>
           <FavoriteButton itemId={it.ID} active={props.favoriteActive} />
         </div>
+        <div className="mt-1 flex items-center gap-1 text-sm text-amber-500">
+          <span>★</span>
+          <span className="font-semibold text-slate-200">{avg > 0 ? avg.toFixed(1) : "0.0"}</span>
+          <span className="text-xs text-slate-400">({totalReviews})</span>
+        </div>
+        <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+          {displayCategoryFilter(it.CATEGORY1 || "General")} • Fresh and fast delivery
+        </p>
 
         <div className={compact ? "mt-2 flex items-center justify-between gap-2" : "mt-3 flex items-center justify-between gap-2"}>
           <div className={compact ? "text-base font-extrabold" : "text-lg font-extrabold"}>{formatTry(unitPrice)}</div>
-          <AddToCartButton itemId={it.ID} name={name} unitPrice={unitPrice} className={compact ? "rounded-xl border border-white/10 bg-sky-400/20 px-2 py-2 text-xs font-medium text-sky-200 transition hover:bg-sky-400/25 disabled:opacity-60" : undefined}>
-            {compact ? "Add" : undefined}
+          <AddToCartButton
+            itemId={it.ID}
+            name={name}
+            unitPrice={unitPrice}
+            className={compact ? "rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60" : "rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"}
+          >
+            {compact ? "Order Now" : "Order Now"}
           </AddToCartButton>
         </div>
       </div>

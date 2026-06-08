@@ -63,22 +63,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
-                        'assets/icons/TradeHub-logo.png',
-                        height: 180,
-                        fit: BoxFit.cover,
+                        'assets/icons/TradeHub-story.png',
+                        height: 200,
+                        fit: BoxFit.contain,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'TradeHub',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: TradeHubColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
                     const Text(
                       'Sign in to your account',
                       textAlign: TextAlign.center,

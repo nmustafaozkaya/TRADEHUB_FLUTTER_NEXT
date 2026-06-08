@@ -76,9 +76,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
-                        'assets/icons/TradeHub-logo.png',
-                        height: 180,
-                        fit: BoxFit.cover,
+                        'assets/icons/TradeHub-story.png',
+                        height: 160,
+                        fit: BoxFit.contain,
                       ),
                     ),
                     const SizedBox(height: 16),

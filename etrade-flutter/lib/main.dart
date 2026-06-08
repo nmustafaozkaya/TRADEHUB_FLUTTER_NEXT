@@ -38,7 +38,19 @@ class AuthGate extends StatelessWidget {
     final authController = Get.find<AuthController>();
     return Obx(() {
       if (!authController.isReady.value) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        // Matches native splash (flutter_native_splash) while session restores.
+        return Scaffold(
+          backgroundColor: const Color(0xFF2D8A8A),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Image.asset(
+                'assets/icons/TradeHub-story.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        );
       }
       if (authController.isLoggedIn.value) {
         return const HomeScreen();

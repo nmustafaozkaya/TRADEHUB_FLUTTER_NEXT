@@ -206,8 +206,9 @@ class _HeaderRow extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
-              'assets/icons/TradeHub-logo.png',
+              'assets/icons/TradeHub-story.png',
               fit: BoxFit.cover,
+              alignment: Alignment.center,
             ),
           ),
         ),
